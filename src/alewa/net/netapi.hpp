@@ -26,6 +26,8 @@ concept NetApi = requires(T t, Args... args)
 
     NETAPI_REQUIRE(freeaddrinfo);
     NETAPI_REQUIRE(gai_strerror);
+
+    { t.addrinfo } -> std::same_as<_sysnet::addrinfo>;
 };
 
 class NetApiImpl
@@ -39,6 +41,8 @@ class NetApiImpl
 public:
     NETAPI_DELEGATE(freeaddrinfo);
     NETAPI_DELEGATE(gai_strerror);
+
+    using addrinfo = _sysnet::addrinfo;
 };
 
 }  // namespace alewa::net
