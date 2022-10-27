@@ -8,7 +8,7 @@ namespace alewa::test {
 
 struct TestCase {
     std::string name;
-    std::string (*run)();
+    void (*run)(std::string&);
 };
 
 static std::vector<TestCase> tests;
@@ -18,7 +18,8 @@ static size_t run_all_tests()
     size_t passed = 0;
 
     for (auto const & test : tests) {
-        std::string const fail_expr = test.run();
+        std::string fail_expr{};
+        test.run(fail_expr);
         if (fail_expr.empty()) {
             std::cout << "[ PASS ] " << test.name << std::endl;
             ++passed;
@@ -27,6 +28,7 @@ static size_t run_all_tests()
             std::cout << "[ FAIL ] " << test.name << ": " << fail_expr
                       << std::endl;
         }
+        fail_expr = {};
     }
 
     std::cout << std::endl << passed << " out of " << tests.size() << " passed"
@@ -39,7 +41,7 @@ static size_t run_all_tests()
 
 
 #define TEST(tname)                                                            \
-    std::string (_test_##tname)();                                             \
+    void (_test_##tname)(std::string&);                                        \
                                                                                \
     struct _add_test_##tname                                                   \
     {                                                                          \
@@ -51,7 +53,11 @@ static size_t run_all_tests()
                                                                                \
     static _add_test_##tname call_add_test_##tname;                            \
                                                                                \
-    std::string (_test_##tname)()
+    void (_test_##tname)(std::string& fail_expr)
 
 #define EXPECT(cond)                                                           \
-    return (cond) ? std::string{} : #cond
+    if (!(cond)) {                                                             \
+        fail_expr = #cond;                                                     \
+        return;                                                                \
+    }                                                                          \
+    static_assert(true, "") /* require a semicolon after using macro */
