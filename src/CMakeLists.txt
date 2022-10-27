@@ -10,6 +10,8 @@ target_compile_options(alewa_compiler_flags
 
 add_executable(alewa
     alewa.cpp
+    alewa/net/netapi.cpp
+    alewa/net/network.cpp
 )
 
 target_link_libraries(alewa
@@ -18,7 +20,7 @@ target_link_libraries(alewa
 )
 
 add_executable(alewa_test
-    ${CMAKE_CURRENT_SOURCE_DIR}/alewa/test/test.cpp
+    alewa/test/test.cpp
 )
 
 target_link_libraries(alewa_test
