@@ -1,4 +1,4 @@
-#include "test.h"
+#include "test.hpp"
 
 int main() {
     using namespace alewa::test;
