@@ -27,11 +27,17 @@ target_include_directories(alewa
 
 add_executable(alewa_test
     alewa/test/test.cpp
+    alewa/net/mocknetapi.cpp
 )
 
 target_link_libraries(alewa_test
     PRIVATE
         alewa_compiler_flags
+)
+
+target_include_directories(alewa_test
+    PRIVATE
+        alewa/
 )
 
 add_test(

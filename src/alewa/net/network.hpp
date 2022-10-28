@@ -8,7 +8,7 @@
 
 namespace alewa::net {
 
-template <NetApi T>
+template <AddrInfoProvider T>
 class AddrInfoList
 {
 private:
@@ -21,7 +21,7 @@ public:
     typename T::addrinfo const * first() const { return p_ai.get(); }
 };
 
-template <NetApi T>
+template <AddrInfoProvider T>
 AddrInfoList<T>::AddrInfoList(T const & api, char const * node,
                               char const * service,
                               typename T::addrinfo const & hints)
@@ -37,7 +37,7 @@ AddrInfoList<T>::AddrInfoList(T const & api, char const * node,
     p_ai.reset(l);
 }
 
-template <NetApi T>
+template <SocketProvider T>
 class Socket
 {
 private:
@@ -59,7 +59,7 @@ public:
     void connect();
 };
 
-template <NetApi T>
+template <SocketProvider T>
 Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
 {
     int ret = T::ERROR;
@@ -79,13 +79,13 @@ Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
     ai = *it;
 }
 
-template <NetApi T>
+template <SocketProvider T>
 Socket<T>::~Socket()
 {
     api.close(sockfd); /* TODO: stderr if this fails */
 }
 
-template <NetApi T>
+template <SocketProvider T>
 void Socket<T>::bind()
 {
     int ret = api.bind(sockfd, ai.ai_addr, ai.ai_addrlen);
@@ -96,7 +96,7 @@ void Socket<T>::bind()
     }
 }
 
-template <NetApi T>
+template <SocketProvider T>
 void Socket<T>::connect()
 {
     int ret = api.connect(sockfd, ai.ai_addr, ai.ai_addrlen);

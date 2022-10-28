@@ -13,32 +13,7 @@ struct TestCase {
 
 static std::vector<TestCase> tests;
 
-static size_t run_all_tests()
-{
-    size_t passed = 0;
-
-    for (auto const & test : tests) {
-        std::string fail_expr{};
-        test.run(fail_expr);
-        if (fail_expr.empty()) {
-            std::cout << "[ PASS ] " << test.name << std::endl;
-            ++passed;
-        }
-        else {
-            std::cout << "[ FAIL ] " << test.name << ": " << fail_expr
-                      << std::endl;
-        }
-        fail_expr = {};
-    }
-
-    std::cout << std::endl << passed << " out of " << tests.size() << " passed"
-              << std::endl;
-
-    return tests.size() - passed;
-}
-
 }  // namespace alewa::test
-
 
 #define TEST(tname)                                                            \
     void (_test_##tname)(std::string&);                                        \
