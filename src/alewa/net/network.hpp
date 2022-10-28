@@ -18,7 +18,7 @@ public:
     AddrInfoList(T const & api, char const * node, char const * service,
                  typename T::addrinfo const & hints);
 
-    typename T::addrinfo const * get() const { return p_ai.get(); }
+    typename T::addrinfo const * first() const { return p_ai.get(); }
 };
 
 template <NetApi T>
@@ -61,7 +61,7 @@ Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
     int fd = T::ERROR;
 
     typename T::addrinfo const * it;
-    for (it = ais.get(); it != nullptr; it = it->ai_next) {
+    for (it = ais.first(); it != nullptr; it = it->ai_next) {
         fd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
         if (fd != T::ERROR) { break; }
     }
