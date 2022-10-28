@@ -4,45 +4,36 @@
 
 namespace alewa::net {
 
-namespace _sysnet {
-/*
- * Private namespace to keep the symbols in system network headers out of the
- * global namespace
- */
-#include <netdb.h>
-}
-
-template <typename T, typename U, typename... Args>
-concept SameAsRetType = requires(U u, Args... args)
+template <typename T>
+concept NetApi = requires(T t)
 {
-    requires std::same_as<T, decltype(std::declval(u(args...)))>;
-};
+    /* types */
+    typename T::addrinfo;
+    typename T::freeaddrinfo_t;
 
-template <typename T, typename... Args>
-concept NetApi = requires(T t, Args... args)
-{
-#define NETAPI_REQUIRE(func)                                                   \
-    { t.func(args...) } -> SameAsRetType<decltype(_sysnet::func)>
+    /* constants */
+    { T::ERROR } -> std::same_as<int const &>;
+    { T::SUCCESS } -> std::same_as<int const &>;
 
-    NETAPI_REQUIRE(freeaddrinfo);
-    NETAPI_REQUIRE(gai_strerror);
+    /* methods */
+    requires requires(char const * node, char const * service,
+                      typename T::addrinfo const * ref_hints,
+                      typename T::addrinfo** ref_ai_list)
+    {
+        { t.getaddrinfo(node, service, ref_hints, ref_ai_list) }
+                -> std::same_as<int>;
+    };
 
-    { t.addrinfo } -> std::same_as<_sysnet::addrinfo>;
-};
+    requires requires(typename T::addrinfo* ai_list)
+    {
+        { t.freeaddrinfo(ai_list) } -> std::same_as<void>;
+    };
 
-class NetApiImpl
-{
-#define NETAPI_DELEGATE(func)                                                  \
-    template <typename... Args>                                                \
-    auto (func)(Args... args) { return (_sysnet::func)(args...); }             \
-                                                                               \
-    static_assert(true, "") /* require a semicolon after using macro */
+    { t.gai_strerror(int{}) } -> std::same_as<char const *>;
 
-public:
-    NETAPI_DELEGATE(freeaddrinfo);
-    NETAPI_DELEGATE(gai_strerror);
+    { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
 
-    using addrinfo = _sysnet::addrinfo;
+    { t.neterror() } -> std::same_as<char const *>;
 };
 
 }  // namespace alewa::net

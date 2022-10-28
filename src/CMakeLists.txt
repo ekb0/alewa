@@ -11,12 +11,18 @@ target_compile_options(alewa_compiler_flags
 add_executable(alewa
     alewa.cpp
     alewa/net/netapi.cpp
+    alewa/net/sysnetapi.cpp
     alewa/net/network.cpp
 )
 
 target_link_libraries(alewa
-    PUBLIC
+    PRIVATE
         alewa_compiler_flags
+)
+
+target_include_directories(alewa
+    PRIVATE
+        alewa/
 )
 
 add_executable(alewa_test
