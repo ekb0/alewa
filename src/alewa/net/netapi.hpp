@@ -9,7 +9,7 @@ concept NetApi = requires(T t)
 {
     /* types */
     typename T::addrinfo;
-    typename T::freeaddrinfo_t;
+    typename T::addrinfo_deleter;
 
     /* constants */
     { T::ERROR } -> std::same_as<int const &>;
@@ -33,7 +33,10 @@ concept NetApi = requires(T t)
 
     { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
 
+    { t.close(int{}) } -> std::same_as<int>;
+
     { t.neterror() } -> std::same_as<char const *>;
+
 };
 
 }  // namespace alewa::net

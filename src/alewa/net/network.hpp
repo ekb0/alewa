@@ -9,33 +9,75 @@
 namespace alewa::net {
 
 template <NetApi T>
-class AddrInfo
+class AddrInfoList
 {
-    using Ai = typename T::addrinfo;
-
 private:
-    std::unique_ptr<Ai, typename T::freeaddrinfo_t> ai_list;
+    std::unique_ptr<typename T::addrinfo, typename T::addrinfo_deleter> p_ai;
 
 public:
-    AddrInfo(T const & api, char const * node, char const * service,
-             Ai const & hints);
+    AddrInfoList(T const & api, char const * node, char const * service,
+                 typename T::addrinfo const & hints);
 
-    Ai const * list() { return ai_list.get(); }
+    typename T::addrinfo const * get() const { return p_ai.get(); }
 };
 
 template <NetApi T>
-AddrInfo<T>::AddrInfo(T const & api, char const * node, char const * service,
-                      Ai const & hints)
-        : ai_list(nullptr, api.freeaddrinfo)
+AddrInfoList<T>::AddrInfoList(T const & api, char const * node,
+                              char const * service,
+                              typename T::addrinfo const & hints)
+        : p_ai(nullptr, api.freeaddrinfo)
 {
-    Ai* l;
+    typename T::addrinfo * l = nullptr;
     int ret = api.getaddrinfo(node, service, &hints, &l);
     if (ret != T::SUCCESS) {
         std::ostringstream err;
         err << "getaddrinfo: " << api.gai_strerror(ret) << "\n";
         throw std::runtime_error(err.str());
     }
-    ai_list.reset(l);
+    p_ai.reset(l);
+}
+
+template <NetApi T>
+class Socket
+{
+private:
+    T const & api;
+    int sockfd;
+
+public:
+    Socket(T const & api, AddrInfoList<T> const & ais);
+    ~Socket();
+
+    Socket(Socket&) = delete;
+    Socket& operator=(Socket&) = delete;
+
+    Socket(Socket&&) noexcept = default;
+    Socket& operator=(Socket&&) noexcept = default;
+};
+
+template <NetApi T>
+Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
+{
+    int fd = T::ERROR;
+
+    typename T::addrinfo const * it;
+    for (it = ais.get(); it != nullptr; it = it->ai_next) {
+        fd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
+        if (fd != T::ERROR) { break; }
+    }
+
+    if (fd == T::ERROR) {
+        std::ostringstream err;
+        err << "socket: " << api.neterror();
+        throw std::runtime_error(err.str());
+    }
+    sockfd = fd;
+}
+
+template <NetApi T>
+Socket<T>::~Socket()
+{
+    api.close(sockfd); /* TODO: stderr if this fails */
 }
 
 }  // namespace alewa::net

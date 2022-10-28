@@ -2,7 +2,7 @@
 
 namespace alewa::net {
 
-char const * SysNetApi::neterror()
+char const * SysNetApi::neterror() const
 {
     return strerror(errno);
 }
