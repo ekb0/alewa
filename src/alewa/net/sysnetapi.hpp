@@ -18,7 +18,7 @@ struct SysNetApi
     static int const SUCCESS = 0;
 
     /* methods */
-    char const * neterror() const;
+    [[nodiscard]] char const * neterror() const;
 
     #define SYSNET_DELEGATE(func, delegate)                                    \
         decltype(&(delegate)) func = (delegate)

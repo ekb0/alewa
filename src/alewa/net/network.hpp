@@ -58,20 +58,20 @@ public:
 template <NetApi T>
 Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
 {
-    int fd = T::ERROR;
+    int ret = T::ERROR;
 
     typename T::addrinfo const * it;
     for (it = ais.first(); it != nullptr; it = it->ai_next) {
-        fd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-        if (fd != T::ERROR) { break; }
+        ret = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
+        if (ret != T::ERROR) { break; }
     }
 
-    if (fd == T::ERROR) {
+    if (ret == T::ERROR) {
         std::ostringstream err;
         err << "socket: " << api.neterror();
         throw std::runtime_error(err.str());
     }
-    sockfd = fd;
+    sockfd = ret;
 }
 
 template <NetApi T>
