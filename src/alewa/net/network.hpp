@@ -17,13 +17,14 @@ private:
     std::unique_ptr<Ai, typename T::freeaddrinfo_t> ai_list;
 
 public:
-    AddrInfo(T api, char const * node, char const * service, Ai const & hints);
+    AddrInfo(T const & api, char const * node, char const * service,
+             Ai const & hints);
 
     Ai const * list() { return ai_list.get(); }
 };
 
 template <NetApi T>
-AddrInfo<T>::AddrInfo(T api, char const * node, char const * service,
+AddrInfo<T>::AddrInfo(T const & api, char const * node, char const * service,
                       Ai const & hints)
         : ai_list(nullptr, api.freeaddrinfo)
 {
