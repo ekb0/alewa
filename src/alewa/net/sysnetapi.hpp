@@ -13,6 +13,9 @@ struct SysNetApi
     using addrinfo = ::addrinfo;
     using addrinfo_deleter [[maybe_unused]] = decltype(&::freeaddrinfo);
 
+    using sockaddr [[maybe_unused]] = ::sockaddr;
+    using socklen_t [[maybe_unused]] = ::socklen_t;
+
     /* constants */
     static int const ERROR = -1;
     static int const SUCCESS = 0;
@@ -28,6 +31,8 @@ struct SysNetApi
     SYSNET_DELEGATE(gai_strerror, ::gai_strerror);
     SYSNET_DELEGATE(socket, ::socket);
     SYSNET_DELEGATE(close, ::close);
+    SYSNET_DELEGATE(bind, ::bind);
+    SYSNET_DELEGATE(connect, ::connect);
 };
 
 }  // namespace alewa::net

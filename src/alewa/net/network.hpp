@@ -43,6 +43,7 @@ class Socket
 private:
     T const & api;
     int sockfd;
+    typename T::addrinfo ai;
 
 public:
     Socket(T const & api, AddrInfoList<T> const & ais);
@@ -53,6 +54,9 @@ public:
 
     Socket(Socket&&) noexcept = default;
     Socket& operator=(Socket&&) noexcept = default;
+
+    void bind();
+    void connect();
 };
 
 template <NetApi T>
@@ -72,12 +76,35 @@ Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
         throw std::runtime_error(err.str());
     }
     sockfd = ret;
+    ai = *it;
 }
 
 template <NetApi T>
 Socket<T>::~Socket()
 {
     api.close(sockfd); /* TODO: stderr if this fails */
+}
+
+template <NetApi T>
+void Socket<T>::bind()
+{
+    int ret = api.bind(sockfd, ai.ai_addr, ai.ai_addrlen);
+    if (ret == T::ERROR) {
+        std::ostringstream err;
+        err << "bind: " << api.neterror();
+        throw std::runtime_error(err.str());
+    }
+}
+
+template <NetApi T>
+void Socket<T>::connect()
+{
+    int ret = api.connect(sockfd, ai.ai_addr, ai.ai_addrlen);
+    if (ret == T::ERROR) {
+        std::ostringstream err;
+        err << "connect: " << api.neterror();
+        throw std::runtime_error(err.str());
+    }
 }
 
 }  // namespace alewa::net

@@ -11,11 +11,16 @@ concept NetApi = requires(T t)
     typename T::addrinfo;
     typename T::addrinfo_deleter;
 
+    typename T::sockaddr;
+    typename T::socklen_t;
+
     /* constants */
     { T::ERROR } -> std::same_as<int const &>;
     { T::SUCCESS } -> std::same_as<int const &>;
 
     /* methods */
+    { t.neterror() } -> std::same_as<char const *>;
+
     requires requires(char const * node, char const * service,
                       typename T::addrinfo const * ref_hints,
                       typename T::addrinfo** ref_ai_list)
@@ -35,7 +40,12 @@ concept NetApi = requires(T t)
 
     { t.close(int{}) } -> std::same_as<int>;
 
-    { t.neterror() } -> std::same_as<char const *>;
+    requires requires(int sockfd, typename T::sockaddr const * ref_addr,
+                      typename T::socklen_t addrlen)
+    {
+        { t.bind(sockfd, ref_addr, addrlen) } -> std::same_as<int>;
+        { t.connect(sockfd, ref_addr, addrlen) } -> std::same_as<int>;
+    };
 
 };
 
