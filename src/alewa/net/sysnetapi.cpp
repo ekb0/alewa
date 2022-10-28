@@ -1,7 +1,10 @@
 #include "sysnetapi.hpp"
 
-namespace alewa::net::details {
+namespace alewa::net {
 
-char const * neterror() { return strerror(errno); }
+char const * SysNetApi::neterror()
+{
+    return strerror(errno);
+}
 
-}  // namespace alewa::net::details
+}  // namespace alewa::net

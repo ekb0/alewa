@@ -28,7 +28,6 @@ AddrInfo<T>::AddrInfo(T api, char const * node, char const * service,
         : ai_list(nullptr, api.freeaddrinfo)
 {
     Ai* l;
-
     int ret = api.getaddrinfo(node, service, &hints, &l);
     if (ret != T::SUCCESS) {
         std::ostringstream err;

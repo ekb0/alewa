@@ -6,12 +6,6 @@
 
 namespace alewa::net {
 
-namespace details {
-
-char const * neterror();
-
-}  // namespace details
-
 struct SysNetApi
 {
     /* types */
@@ -30,7 +24,7 @@ struct SysNetApi
     SYSNET_DELEGATE(freeaddrinfo, ::freeaddrinfo);
     SYSNET_DELEGATE(gai_strerror, ::gai_strerror);
     SYSNET_DELEGATE(socket, ::socket);
-    SYSNET_DELEGATE(neterror, details::neterror);
+    char const * neterror();
 };
 
 }  // namespace alewa::net
