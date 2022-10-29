@@ -38,30 +38,49 @@ struct MockProviderBase
 
 struct MockAddrInfoProvider : public MockProviderBase
 {
+    using addrinfo_deleter [[maybe_unused]] = void(*)(addrinfo*);
+
     addrinfo ai{};
     addrinfo* ai_list = &ai;
 
-    static unsigned nfreed;
+    static bool* p_is_freed;
+    static void set_is_freed(bool* val) { p_is_freed = val; }
 
-    int getaddrinfo(char const*, char const*, addrinfo const*,
-                    addrinfo** ref_ai) const;
-
-    static void freeaddrinfo(addrinfo*) { ++nfreed; };
     [[nodiscard]] char const* gai_strerror(int) const { return err; }
 
-    using addrinfo_deleter [[maybe_unused]] =
-            decltype(&MockAddrInfoProvider::freeaddrinfo);
+    int getaddrinfo(char const*, char const*, addrinfo const*,
+                    addrinfo** ref_ai) const
+    {
+        *ref_ai = ai_list;
+        return ret_code;
+    }
+
+    static void freeaddrinfo(addrinfo*)
+    {
+        if (p_is_freed != nullptr) {
+            *p_is_freed = true;
+        }
+    }
 };
+
+inline bool* MockAddrInfoProvider::p_is_freed = nullptr;
 
 struct MockSocketProvider : public MockProviderBase
 {
     using sockaddr = sockaddr_t;
     using socklen_t = unsigned short;
 
-    static unsigned nclosed;
+    bool* p_is_closed = nullptr;
+    void set_is_closed(bool* val) { p_is_closed = val; };
 
     [[nodiscard]] int socket (int, int, int) const { return ret_code; }
-    int close(int) const;
+    int close(int) const
+    {
+        if (p_is_closed != nullptr) {
+            *p_is_closed = true;
+        }
+        return ret_code;
+    }
 
     int bind(int, sockaddr const*, socklen_t) const { return ret_code; }
     int connect(int, sockaddr const*, socklen_t) const { return ret_code; }

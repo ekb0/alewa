@@ -22,7 +22,7 @@ std::string tostr(T const & x)
     }
     else {
         std::ostringstream ss;
-        char s[sizeof(x)];
+        char s[10];
         for (size_t i = 0; i < sizeof(x); ++i) {
             sprintf(s, "%02x", (unsigned int) ((char*)&x)[i]);
             ss << s;
@@ -34,8 +34,7 @@ std::string tostr(T const & x)
 template <typename T, typename U>
 std::string pretty_err(std::string const & expr, T const & x, U const & y)
 {
-    return "\n" + expr + ":\nExpected: " + tostr(x) + "\n" + "Actual: "
-           + tostr(y);
+    return "\n" + expr + ":\nExpected: " + tostr(x) + "\nActual: " + tostr(y);
 }
 
 }  // namespace alewa::test

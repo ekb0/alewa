@@ -43,12 +43,15 @@ TEST(addrinfolist_sad_construction)
 
 TEST(addrinfolist_resource_cleanup)
 {
+    bool is_freed = false;
     MockAddrInfoProvider api;
-    MockAddrInfoProvider::nfreed = 0;
+    MockAddrInfoProvider::set_is_freed(&is_freed);
     {
         AddrInfoList ais{api, nullptr, "8080", hints};
+        EXPECT_EQ(is_freed, false);
     }
-    EXPECT_EQ(MockAddrInfoProvider::nfreed, 1);
+    MockAddrInfoProvider::set_is_freed(nullptr);
+    EXPECT_EQ(is_freed, true);
 }
 
 TEST(socket_happy_construction)
@@ -90,14 +93,16 @@ TEST(socket_sad_construction)
 TEST(socket_resource_cleanup)
 {
     MockAddrInfoProvider ai_api;
-    MockSocketProvider sock_api;
     AddrInfoList ais{ai_api, nullptr, "8080", hints};
 
-    MockSocketProvider::nclosed = 0;
-    {
-        Socket socket{sock_api, ais};
-    }
-    EXPECT_EQ(MockSocketProvider::nclosed, 1);
+    bool is_closed = false;
+    MockSocketProvider sock_api;
+    sock_api.set_is_closed(&is_closed);
+
+    Socket socket{sock_api, ais};
+    socket.~Socket();
+
+    EXPECT_EQ(is_closed, true);
 }
 
 auto new_sock(MockSocketProvider const & sock_api,

@@ -18,7 +18,10 @@ public:
     AddrInfoList(T const & api, char const * node, char const * service,
                  typename T::addrinfo const & hints);
 
-    typename T::addrinfo const * first() const { return p_ai.get(); }
+    auto first() const -> typename T::addrinfo const *
+    {
+        return p_ai.get();
+    }
 };
 
 template <AddrInfoProvider T>
@@ -41,6 +44,8 @@ template <SocketProvider T, AddrInfoProvider U = T>
 class Socket
 {
 private:
+    static int const NULL_FD = -1;
+
     T const & api;
     int sockfd;
     typename T::addrinfo ai;
@@ -52,12 +57,14 @@ public:
     Socket(Socket&) = delete;
     Socket& operator=(Socket&) = delete;
 
-    Socket(Socket&&) noexcept = default;
-    Socket& operator=(Socket&&) noexcept = default;
+    Socket(Socket&& other) noexcept;
+    Socket& operator=(Socket&& other) noexcept;
 
-    [[nodiscard]] int fd() const { return sockfd; }
+    [[nodiscard]] auto fd() const -> int { return sockfd; }
     [[nodiscard]] auto info() const -> typename T::addrinfo const &
-    { return ai; }
+    {
+        return ai;
+    }
 
     void bind();
     void connect();
@@ -81,12 +88,29 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(api)
     }
     sockfd = ret;
     ai = *it;
+    ai.ai_next = nullptr;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::~Socket()
 {
-    api.close(sockfd); /* TODO: stderr if this fails */
+    if (sockfd != NULL_FD) { api.close(sockfd); } // TODO: stderr if this fails
+}
+
+template <SocketProvider T, AddrInfoProvider U>
+Socket<T, U>::Socket(Socket<T, U>&& other) noexcept
+        : api(other.api), sockfd(other.sockfd), ai(other.ai)
+{
+    other.sockfd = NULL_FD;
+}
+
+template <SocketProvider T, AddrInfoProvider U>
+Socket<T, U>& Socket<T,U>::operator=(Socket&& other) noexcept
+{
+    this->ai = other.ai;
+    this->api = other.api;
+    std::swap(this->sockfd, other.sockfd);
+    return *this;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
