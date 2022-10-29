@@ -31,13 +31,13 @@ AddrInfoList<T>::AddrInfoList(T const & api, char const * node,
     int ret = api.getaddrinfo(node, service, &hints, &l);
     if (ret != T::SUCCESS) {
         std::ostringstream err;
-        err << "getaddrinfo: " << api.gai_strerror(ret) << "\n";
+        err << "getaddrinfo: " << api.gai_strerror(ret) << std::endl;
         throw std::runtime_error(err.str());
     }
     p_ai.reset(l);
 }
 
-template <SocketProvider T>
+template <SocketProvider T, AddrInfoProvider U = T>
 class Socket
 {
 private:
@@ -46,7 +46,7 @@ private:
     typename T::addrinfo ai;
 
 public:
-    Socket(T const & api, AddrInfoList<T> const & ais);
+    Socket(T const & api, AddrInfoList<U> const & ais);
     ~Socket();
 
     Socket(Socket&) = delete;
@@ -55,12 +55,16 @@ public:
     Socket(Socket&&) noexcept = default;
     Socket& operator=(Socket&&) noexcept = default;
 
+    [[nodiscard]] int fd() const { return sockfd; }
+    [[nodiscard]] auto info() const -> typename T::addrinfo const &
+    { return ai; }
+
     void bind();
     void connect();
 };
 
-template <SocketProvider T>
-Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
+template <SocketProvider T, AddrInfoProvider U>
+Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(api)
 {
     int ret = T::ERROR;
 
@@ -72,37 +76,37 @@ Socket<T>::Socket(T const & api, AddrInfoList<T> const & ais) : api(api)
 
     if (ret == T::ERROR) {
         std::ostringstream err;
-        err << "socket: " << api.neterror();
+        err << "socket: " << api.neterror() << std::endl;
         throw std::runtime_error(err.str());
     }
     sockfd = ret;
     ai = *it;
 }
 
-template <SocketProvider T>
-Socket<T>::~Socket()
+template <SocketProvider T, AddrInfoProvider U>
+Socket<T, U>::~Socket()
 {
     api.close(sockfd); /* TODO: stderr if this fails */
 }
 
-template <SocketProvider T>
-void Socket<T>::bind()
+template <SocketProvider T, AddrInfoProvider U>
+void Socket<T, U>::bind()
 {
     int ret = api.bind(sockfd, ai.ai_addr, ai.ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
-        err << "bind: " << api.neterror();
+        err << "bind: " << api.neterror() << std::endl;
         throw std::runtime_error(err.str());
     }
 }
 
-template <SocketProvider T>
-void Socket<T>::connect()
+template <SocketProvider T, AddrInfoProvider U>
+void Socket<T, U>::connect()
 {
     int ret = api.connect(sockfd, ai.ai_addr, ai.ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
-        err << "connect: " << api.neterror();
+        err << "connect: " << api.neterror() << std::endl;
         throw std::runtime_error(err.str());
     }
 }
