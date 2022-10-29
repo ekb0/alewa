@@ -1,2 +1,2 @@
 # alewa
-A lightweight static web server
+A static web server
