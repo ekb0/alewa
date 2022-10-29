@@ -33,7 +33,7 @@ struct MockProviderBase
 
     int ret_code = SUCCESS;
 
-    [[nodiscard]] char const* neterror() const { return err; }
+    [[nodiscard]] auto neterror() const -> char const *  { return err; }
 };
 
 struct MockAddrInfoProvider : public MockProviderBase

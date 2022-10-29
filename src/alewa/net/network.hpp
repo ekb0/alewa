@@ -98,14 +98,14 @@ Socket<T, U>::~Socket()
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::Socket(Socket<T, U>&& other) noexcept
+Socket<T, U>::Socket(Socket&& other) noexcept
         : api(other.api), sockfd(other.sockfd), ai(other.ai)
 {
     other.sockfd = NULL_FD;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>& Socket<T,U>::operator=(Socket&& other) noexcept
+auto Socket<T,U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 {
     this->ai = other.ai;
     this->api = other.api;
