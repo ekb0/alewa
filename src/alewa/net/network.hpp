@@ -46,9 +46,9 @@ class Socket
 private:
     static int const NULL_FD = -1;
 
-    T const & api;
     int sockfd;
-    typename T::addrinfo ai;
+    T const & api;
+    std::unique_ptr<typename T::addrinfo> ref_ai;
 
 public:
     Socket(T const & api, AddrInfoList<U> const & ais);
@@ -63,7 +63,7 @@ public:
     [[nodiscard]] auto fd() const -> int { return sockfd; }
     [[nodiscard]] auto info() const -> typename T::addrinfo const &
     {
-        return ai;
+        return *ref_ai;
     }
 
     void bind();
@@ -87,8 +87,8 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(api)
         throw std::runtime_error(err.str());
     }
     sockfd = ret;
-    ai = *it;
-    ai.ai_next = nullptr;
+    ref_ai = std::make_unique<typename T::addrinfo>(*it);
+    ref_ai->ai_next = nullptr;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
@@ -99,16 +99,18 @@ Socket<T, U>::~Socket()
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::Socket(Socket&& other) noexcept
-        : api(other.api), sockfd(other.sockfd), ai(other.ai)
+        : sockfd(other.sockfd), api(other.api), ref_ai(std::move(other.ref_ai))
 {
+    assert(ref_ai != nullptr);
     other.sockfd = NULL_FD;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 auto Socket<T,U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 {
-    this->ai = other.ai;
+    assert(other.ref_ai != nullptr);
     this->api = other.api;
+    this->ref_ai = std::move(other.ref_ai);
     std::swap(this->sockfd, other.sockfd);
     return *this;
 }
@@ -116,7 +118,7 @@ auto Socket<T,U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 template <SocketProvider T, AddrInfoProvider U>
 void Socket<T, U>::bind()
 {
-    int ret = api.bind(sockfd, ai.ai_addr, ai.ai_addrlen);
+    int ret = api.bind(sockfd, ref_ai->ai_addr, ref_ai->ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
         err << "bind: " << api.neterror() << std::endl;
@@ -127,7 +129,7 @@ void Socket<T, U>::bind()
 template <SocketProvider T, AddrInfoProvider U>
 void Socket<T, U>::connect()
 {
-    int ret = api.connect(sockfd, ai.ai_addr, ai.ai_addrlen);
+    int ret = api.connect(sockfd, ref_ai->ai_addr, ref_ai->ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
         err << "connect: " << api.neterror() << std::endl;

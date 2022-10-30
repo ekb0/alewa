@@ -65,7 +65,6 @@ TEST(socket_happy_construction)
         Socket socket{sock_api, ais};
 
         EXPECT_EQ(socket.fd(), sock_api.ret_code);
-        EXPECT_NEQ(&(socket.info()), &(ai_api.ai));
         EXPECT_EQ(socket.info().ai_flags, ai_api.ai.ai_flags);
     }
     catch (std::runtime_error const & e) {
