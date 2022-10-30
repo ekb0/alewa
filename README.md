@@ -1,6 +1,8 @@
 # alewa
 A static web server written in ✨ modern c++ ✨
 
+![alewa.jpg](data/alewa.jpg)
+
 ### Alewa Hungarian Convention
 
 This project uses a mild form of hungarian convention. We do not prefix all
