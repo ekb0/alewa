@@ -5,13 +5,6 @@
 
 namespace alewa::net::test {
 
-std::string api_err_msg(std::string const & msg)
-{
-    std::ostringstream ss;
-    ss << msg << ": " << MockProviderBase::err << "\n";
-    return ss.str();
-}
-
 TEST(addrinfolist_construction)
 {
     MockAddrInfoProvider api;
@@ -22,8 +15,8 @@ TEST(addrinfolist_construction)
         api.ret_code = MockAddrInfoProvider::ERROR;
         AddrInfoList sad{api, nullptr, nullptr, nullptr};
     }
-    catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api_err_msg("getaddrinfo"));
+    catch (int e) {
+        EXPECT_EQ(e, api.ret_code);
         return;
     }
     BUG(std::string("sad construction did not throw"));
@@ -57,8 +50,8 @@ TEST(socket_construction)
         sock_api.ret_code = MockSocketProvider::ERROR;
         Socket sad{sock_api, ais};
     }
-    catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api_err_msg("socket"));
+    catch (int e) {
+        EXPECT_EQ(e, sock_api.errorno);
         return;
     }
     BUG(std::string("sad construction did not throw"));
@@ -99,8 +92,8 @@ TEST(socket_bind)
         sock_api.ret_code = MockSocketProvider::ERROR;
         sad.bind(sock_api);
     }
-    catch(std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api_err_msg("bind"));
+    catch (int e) {
+        EXPECT_EQ(e, sock_api.errorno);
         return;
     }
     BUG(std::string("sad bind did not throw"));
@@ -117,8 +110,8 @@ TEST(socket_connect)
         sock_api.ret_code = MockSocketProvider::ERROR;
         sad.connect(sock_api);
     }
-    catch(std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api_err_msg("connect"));
+    catch (int e) {
+        EXPECT_EQ(e, sock_api.errorno);
         return;
     }
     BUG(std::string("sad connect did not throw"));
@@ -135,8 +128,8 @@ TEST(socket_listen)
         sock_api.ret_code = MockSocketProvider::ERROR;
         sad.listen(sock_api, 0);
     }
-    catch(std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api_err_msg("listen"));
+    catch (int e) {
+        EXPECT_EQ(e, sock_api.errorno);
         return;
     }
     BUG(std::string("sad listen did not throw"));
@@ -159,7 +152,7 @@ TEST(socket_accept)
         sock.accept(sock_api);
     }
     catch(int e) {
-        EXPECT_EQ(e, MockSocketProvider::ERROR);
+        EXPECT_EQ(e, sock_api.errorno);
         return;
     }
     BUG(std::string("sad accept did not throw"));

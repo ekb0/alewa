@@ -4,6 +4,7 @@
 #include <cstring>
 #include <netdb.h>
 #include <unistd.h>
+#include <string>
 
 namespace alewa::net {
 
@@ -18,14 +19,15 @@ struct SysNetApi
     static int const ERROR = -1;
     static int const SUCCESS = 0;
 
-    [[nodiscard]] auto error() const -> char const * ;
+    [[nodiscard]] auto error(int err) const -> std::string;
+    [[nodiscard]] int err_no() const;
 
     /* AddrInfoProvider */
     using AIDeleter [[maybe_unused]] = decltype(&::freeaddrinfo);
 
     static AIDeleter freeaddrinfo;
     SYSNET_DELEGATE(getaddrinfo, ::getaddrinfo);
-    SYSNET_DELEGATE(gai_strerror, ::gai_strerror);
+    SYSNET_DELEGATE(gai_error, ::gai_strerror);
 
     /* SocketProvider */
     using SockAddr [[maybe_unused]] = ::sockaddr;

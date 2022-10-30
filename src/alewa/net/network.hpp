@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
 #include <memory>
-#include <sstream>
 
 #include "netapi.hpp"
 
@@ -29,11 +27,7 @@ AddrInfoList<T>::AddrInfoList(T const & api, char const * p_node,
 {
     AddrInfo * l = nullptr;
     int ret = api.getaddrinfo(p_node, p_service, p_hints, &l);
-    if (ret != T::SUCCESS) {
-        std::ostringstream err;
-        err << "getaddrinfo: " << api.gai_strerror(ret) << std::endl;
-        throw std::runtime_error(err.str());
-    }
+    if (ret != T::SUCCESS) { throw ret; }
     p_ai.reset(l);
 }
 
@@ -101,11 +95,7 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
         }
     }
 
-    if (fd == T::ERROR) {
-        std::ostringstream err;
-        err << "socket: " << api.error() << std::endl;
-        throw std::runtime_error(err.str());
-    }
+    if (fd == T::ERROR) { throw api.err_no(); }
     sockfd = fd;
     ai = std::move(p_ai);
 }
@@ -141,33 +131,21 @@ template <SocketProvider T, AddrInfoProvider U>
 void Socket<T, U>::bind(T const & api, AddrInfo const & target)
 {
     int ret = api.bind(sockfd, target.ai_addr, target.ai_addrlen);
-    if (ret == T::ERROR) {
-        std::ostringstream err;
-        err << "bind: " << api.error() << std::endl;
-        throw std::runtime_error(err.str());
-    }
+    if (ret == T::ERROR) { throw api.err_no(); }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 void Socket<T, U>::connect(T const & api, AddrInfo const & target)
 {
     int ret = api.connect(sockfd, target.ai_addr, target.ai_addrlen);
-    if (ret == T::ERROR) {
-        std::ostringstream err;
-        err << "connect: " << api.error() << std::endl;
-        throw std::runtime_error(err.str());
-    }
+    if (ret == T::ERROR) { throw api.err_no(); }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 void Socket<T, U>::listen(T const & api, int backlog)
 {
     int ret = api.listen(sockfd, backlog);
-    if (ret == T::ERROR) {
-        std::ostringstream err;
-        err << "listen: " << api.error() << std::endl;
-        throw std::runtime_error(err.str());
-    }
+    if (ret == T::ERROR) { throw api.err_no(); }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
@@ -178,7 +156,7 @@ auto Socket<T, U>::accept(T const & api) -> Socket<T, U>
     int fd = api.accept(sockfd, tmp.ai_addr, &tmp.ai_addrlen);
     if (fd == T::ERROR) {
         delete tmp.ai_addr;
-        throw fd;
+        throw api.err_no();
     }
     return Socket{fd, release, tmp};
 }

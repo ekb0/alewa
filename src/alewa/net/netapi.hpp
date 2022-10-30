@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <string>
 
 namespace alewa::net {
 
@@ -15,7 +16,8 @@ concept ProviderBase = requires(T t)
     { T::SUCCESS } -> std::same_as<int const &>;
 
     /* methods */
-    { t.error() } -> std::same_as<char const *>;
+    { t.error(int{}) } -> std::same_as<std::string>;
+    { t.err_no() } -> std::same_as<int>;
 };
 
 template <typename T>
@@ -37,7 +39,7 @@ concept AddrInfoProvider= requires(T const t)
         { T::freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
 
-    { t.gai_strerror(int{}) } -> std::same_as<char const *>;
+    { t.gai_error(int{}) } -> std::same_as<char const *>;
 };
 
 template <typename T>

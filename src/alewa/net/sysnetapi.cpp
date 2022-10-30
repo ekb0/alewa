@@ -2,10 +2,12 @@
 
 namespace alewa::net {
 
-auto SysNetApi::error() const -> char const *
+auto SysNetApi::error(int err) const -> std::string
 {
-    return strerror(errno);
+    return strerror(err);
 }
+
+[[nodiscard]] int SysNetApi::err_no() const { return errno; }
 
 SysNetApi::AIDeleter SysNetApi::freeaddrinfo [[maybe_unused]] = ::freeaddrinfo;
 
