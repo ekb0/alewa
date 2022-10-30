@@ -67,7 +67,7 @@ public:
     void connect() { connect(*ai); }
 
     void listen(int backlog);
-    Socket accept();
+    auto accept() -> Socket;
 };
 
 template <SocketProvider T, AddrInfoProvider U>
