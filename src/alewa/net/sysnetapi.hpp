@@ -25,17 +25,16 @@ struct SysNetApi
     /* AddrInfoProvider */
     using AIDeleter [[maybe_unused]] = decltype(&::freeaddrinfo);
 
-    static AIDeleter freeaddrinfo;
     SYSNET_DELEGATE(getaddrinfo, ::getaddrinfo);
+    SYSNET_DELEGATE(freeaddrinfo, ::freeaddrinfo);
     SYSNET_DELEGATE(gai_error, ::gai_strerror);
 
     /* SocketProvider */
     using SockAddr [[maybe_unused]] = ::sockaddr;
     using SockLen_t [[maybe_unused]] = ::socklen_t;
-    using SockCloser [[maybe_unused]] = decltype(&::close);
 
-    static SockCloser close;
     SYSNET_DELEGATE(socket, ::socket);
+    SYSNET_DELEGATE(close, ::close);
     SYSNET_DELEGATE(bind, ::bind);
     SYSNET_DELEGATE(connect, ::connect);
     SYSNET_DELEGATE(listen, ::listen);

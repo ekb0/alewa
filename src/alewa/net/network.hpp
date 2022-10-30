@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <cassert>
 
 #include "netapi.hpp"
 
@@ -23,7 +24,7 @@ public:
 template <AddrInfoProvider T>
 AddrInfoList<T>::AddrInfoList(T const & api, char const * p_node,
                               char const * p_service, AddrInfo const * p_hints)
-        : p_ai(nullptr, T::freeaddrinfo)
+        : p_ai(nullptr, api.freeaddrinfo)
 {
     AddrInfo * l = nullptr;
     int ret = api.getaddrinfo(p_node, p_service, p_hints, &l);
@@ -37,15 +38,14 @@ class Socket
 private:
     using AddrInfo = typename T::AddrInfo;
     using SockAddr = typename T::SockAddr;
-    using SockCloser = typename T::SockCloser;
 
     static int const NULL_FD = T::ERROR;
 
+    T const * const api;
     int sockfd;
-    SockCloser release;
     std::unique_ptr<AddrInfo const> ai;
 
-    Socket(int sockfd, SockCloser const & closer, AddrInfo const & ai);
+    Socket(T const * api, int sockfd, AddrInfo const & ai);
 
 public:
     Socket(T const & api, AddrInfoList<U> const & ais);
@@ -60,26 +60,24 @@ public:
     [[nodiscard]] auto fd() const noexcept -> int { return sockfd; }
     [[nodiscard]] auto info() const noexcept -> AddrInfo const & { return *ai; }
 
-    void bind(T const & api, AddrInfo const & target);
-    void connect(T const & api, AddrInfo const & target);
+    void bind(AddrInfo const & target);
+    void connect(AddrInfo const & target);
 
-    void bind(T const & api) { bind(api, *ai); }
-    void connect(T const & api) { connect(api, *ai); }
+    void bind() { bind(*ai); }
+    void connect() { connect(*ai); }
 
-    void listen(T const & api, int backlog);
-    Socket accept(T const & api);
+    void listen(int backlog);
+    Socket accept();
 };
 
 template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::Socket(int sockfd, SockCloser const & closer, AddrInfo const & ai)
-        : sockfd(sockfd), release(closer),
-          ai(std::make_unique<AddrInfo const>(ai))
-{}
+Socket<T, U>::Socket(T const * api, int sockfd, AddrInfo const & ai)
+        : api(api), sockfd(sockfd), ai(std::make_unique<AddrInfo const>(ai))
+{ assert(api); }
 
 
 template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
-        : release(T::close)
+Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(&api)
 {
     int fd = T::ERROR;
     std::unique_ptr<AddrInfo> p_ai = nullptr;
@@ -104,61 +102,61 @@ template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::~Socket()
 {
     if (sockfd != NULL_FD) {
-        if (ai->ai_addr) { delete ai->ai_addr; }
-        release(sockfd); /* TODO: stderr if this fails */
+        if (ai && ai->ai_addr) { delete ai->ai_addr; }
+        api->close(sockfd); /* TODO: stderr if this fails */
     }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::Socket(Socket&& other) noexcept
-        : sockfd(other.sockfd), release(other.release), ai(std::move(other.ai))
+        : api(other.api), sockfd(other.sockfd), ai(std::move(other.ai))
 {
-    assert(ai != nullptr);
+    assert(api && ai);
     other.sockfd = NULL_FD;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 auto Socket<T, U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 {
-    assert(other.ai != nullptr);
-    assert(&release == &other.release);
+    assert(other.api && other.ai);
+    api = other.api;
     std::swap(sockfd, other.sockfd);
     ai = std::move(other.ai);
     return *this;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::bind(T const & api, AddrInfo const & target)
+void Socket<T, U>::bind(AddrInfo const & target)
 {
-    int ret = api.bind(sockfd, target.ai_addr, target.ai_addrlen);
-    if (ret == T::ERROR) { throw api.err_no(); }
+    int ret = api->bind(sockfd, target.ai_addr, target.ai_addrlen);
+    if (ret == T::ERROR) { throw api->err_no(); }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::connect(T const & api, AddrInfo const & target)
+void Socket<T, U>::connect(AddrInfo const & target)
 {
-    int ret = api.connect(sockfd, target.ai_addr, target.ai_addrlen);
-    if (ret == T::ERROR) { throw api.err_no(); }
+    int ret = api->connect(sockfd, target.ai_addr, target.ai_addrlen);
+    if (ret == T::ERROR) { throw api->err_no(); }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::listen(T const & api, int backlog)
+void Socket<T, U>::listen(int backlog)
 {
-    int ret = api.listen(sockfd, backlog);
-    if (ret == T::ERROR) { throw api.err_no(); }
+    int ret = api->listen(sockfd, backlog);
+    if (ret == T::ERROR) { throw api->err_no(); }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-auto Socket<T, U>::accept(T const & api) -> Socket<T, U>
+auto Socket<T, U>::accept() -> Socket<T, U>
 {
     AddrInfo tmp{};
-    tmp.ai_addr = new SockAddr{};  /* lol, "modern" c++ */
-    int fd = api.accept(sockfd, tmp.ai_addr, &tmp.ai_addrlen);
+    tmp.ai_addr = new SockAddr{};  /* "modern" c++ ;) */
+    int fd = api->accept(sockfd, tmp.ai_addr, &tmp.ai_addrlen);
     if (fd == T::ERROR) {
         delete tmp.ai_addr;
-        throw api.err_no();
+        throw api->err_no();
     }
-    return Socket{fd, release, tmp};
+    return Socket{api, fd, tmp};
 }
 
 }  // namespace alewa::net

@@ -83,14 +83,13 @@ struct MockSocketProvider : public MockProviderBase
 {
     using SockAddr = sockaddr;
     using SockLen_t = unsigned short;
-    using SockCloser [[maybe_unused]] = int(*)(int);
 
     static bool* p_is_closed;
     static void set_is_closed(bool* val) { p_is_closed = val; };
 
     [[nodiscard]] int socket (int, int, int) const { return ret_code; }
 
-    static int close(int)
+    int close(int) const
     {
         if (p_is_closed) { *p_is_closed = true; }
         return SUCCESS;

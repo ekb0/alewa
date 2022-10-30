@@ -36,7 +36,7 @@ concept AddrInfoProvider= requires(T const t)
     {
         { t.getaddrinfo(p_node, p_service, p_hints, p_ai_list) }
         -> std::same_as<int>;
-        { T::freeaddrinfo(ai_list) } -> std::same_as<void>;
+        { t.freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
 
     { t.gai_error(int{}) } -> std::same_as<char const *>;
@@ -50,11 +50,11 @@ concept SocketProvider = requires(T const t)
     /* types */
     typename T::SockAddr;
     typename T::SockLen_t;
-    typename T::SockCloser;
 
     /* methods */
     { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
-    { T::close(int{}) } -> std::same_as<int>;
+    { t.close(int{}) } -> std::same_as<int>;
+    { t.listen(int{}, int{}) } -> std::same_as<int>;
 
     requires requires(typename T::SockAddr const * addr,
                       typename T::SockAddr* p_addr,
@@ -63,7 +63,6 @@ concept SocketProvider = requires(T const t)
     {
         { t.bind(int{}, addr, addrlen) } -> std::same_as<int>;
         { t.connect(int{}, addr, addrlen) } -> std::same_as<int>;
-        { t.listen(int{}, int{}) } -> std::same_as<int>;
         { t.accept(int{}, p_addr, p_addrlen) } -> std::same_as<int>;
     };
 };
