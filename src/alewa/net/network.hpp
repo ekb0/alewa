@@ -25,7 +25,7 @@ public:
 template <AddrInfoProvider T>
 AddrInfoList<T>::AddrInfoList(T const & api, char const * p_node,
                               char const * p_service, AddrInfo const * p_hints)
-        : p_ai(nullptr, api.freeaddrinfo)
+        : p_ai(nullptr, T::freeaddrinfo)
 {
     AddrInfo * l = nullptr;
     int ret = api.getaddrinfo(p_node, p_service, p_hints, &l);
@@ -67,7 +67,7 @@ public:
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
-        : release(api.close)
+        : release(T::close)
 {
     int ret = T::ERROR;
     std::unique_ptr<AddrInfo> p_ai = nullptr;
@@ -84,7 +84,7 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
 
     if (ret == T::ERROR) {
         std::ostringstream err;
-        err << "socket: " << api.neterror() << std::endl;
+        err << "socket: " << api.error() << std::endl;
         throw std::runtime_error(err.str());
     }
     sockfd = ret;
@@ -121,7 +121,7 @@ void Socket<T, U>::bind(T const & api)
     int ret = api.bind(sockfd, ai->ai_addr, ai->ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
-        err << "bind: " << api.neterror() << std::endl;
+        err << "bind: " << api.error() << std::endl;
         throw std::runtime_error(err.str());
     }
 }
@@ -132,7 +132,7 @@ void Socket<T, U>::connect(T const & api)
     int ret = api.connect(sockfd, ai->ai_addr, ai->ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
-        err << "connect: " << api.neterror() << std::endl;
+        err << "connect: " << api.error() << std::endl;
         throw std::runtime_error(err.str());
     }
 }

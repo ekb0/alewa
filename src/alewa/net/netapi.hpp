@@ -15,11 +15,11 @@ concept ProviderBase = requires(T t)
     { T::SUCCESS } -> std::same_as<int const &>;
 
     /* methods */
-    { t.neterror() } -> std::same_as<char const *>;
+    { t.error() } -> std::same_as<char const *>;
 };
 
 template <typename T>
-concept AddrInfoProvider= requires(T t)
+concept AddrInfoProvider= requires(T const t)
 {
     requires ProviderBase<T>;
 
@@ -37,14 +37,14 @@ concept AddrInfoProvider= requires(T t)
 
     requires requires(typename T::AddrInfo* ai_list)
     {
-        { t.freeaddrinfo(ai_list) } -> std::same_as<void>;
+        { T::freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
 
     { t.gai_strerror(int{}) } -> std::same_as<char const *>;
 };
 
 template <typename T>
-concept SocketProvider = requires(T t)
+concept SocketProvider = requires(T const t)
 {
     requires ProviderBase<T>;
 
@@ -56,7 +56,7 @@ concept SocketProvider = requires(T t)
     /* methods */
     { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
 
-    { t.close(int{}) } -> std::same_as<int>;
+    { T::close(int{}) } -> std::same_as<int>;
 
     requires requires(int sockfd, typename T::SockAddr const * addr,
                       typename T::SockLen_t addrlen)

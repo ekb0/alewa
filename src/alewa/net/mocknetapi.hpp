@@ -32,14 +32,13 @@ struct MockProviderBase
 
     using AddrInfo = addrinfo;
 
-    static constexpr char const * const err = "Error";
-
     static int const ERROR = -1;
     static int const SUCCESS = 0;
 
-    int ret_code = SUCCESS;
+    [[nodiscard]] auto error() const -> char const * { return err; }
 
-    [[nodiscard]] auto neterror() const -> char const *  { return err; }
+    static constexpr char const * const err = "Error";
+    int ret_code = SUCCESS;
 };
 
 struct MockAddrInfoProvider : public MockProviderBase
@@ -51,7 +50,7 @@ struct MockAddrInfoProvider : public MockProviderBase
     static bool* p_is_freed;
     static void set_is_freed(bool* val) { p_is_freed = val; }
 
-    [[nodiscard]] char const* gai_strerror(int) const { return err; }
+    [[nodiscard]] auto gai_strerror(int) const -> char const * { return err; }
 
     int getaddrinfo(char const*, char const*, AddrInfo const*,
                     AddrInfo** p_ai_list) const
