@@ -25,7 +25,7 @@ struct SysNetApi
     [[nodiscard]] auto neterror() const -> char const * ;
 
     #define SYSNET_DELEGATE(func, delegate)                                    \
-        decltype(&(delegate)) func = (delegate)
+        decltype(&(delegate)) const func = (delegate)
 
     SYSNET_DELEGATE(getaddrinfo, ::getaddrinfo);
     SYSNET_DELEGATE(freeaddrinfo, ::freeaddrinfo);

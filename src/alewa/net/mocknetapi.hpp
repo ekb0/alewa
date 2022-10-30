@@ -2,6 +2,12 @@
 
 namespace alewa::net::test {
 
+/*
+ * WARNING:
+ * The providers in this class are stack based. When used for tests, they should
+ * never go out of scope before the instances they have been used to create.
+ */
+
 struct sockaddr
 {
     unsigned short sa_family;
@@ -40,8 +46,7 @@ struct MockAddrInfoProvider : public MockProviderBase
 {
     using AIDeleter [[maybe_unused]] = void(*)(AddrInfo*);
 
-    AddrInfo ai{};
-    AddrInfo* ai_list = &ai;
+    mutable AddrInfo ai{};
 
     static bool* p_is_freed;
     static void set_is_freed(bool* val) { p_is_freed = val; }
@@ -49,17 +54,15 @@ struct MockAddrInfoProvider : public MockProviderBase
     [[nodiscard]] char const* gai_strerror(int) const { return err; }
 
     int getaddrinfo(char const*, char const*, AddrInfo const*,
-                    AddrInfo** ref_ai) const
+                    AddrInfo** p_ai_list) const
     {
-        *ref_ai = ai_list;
+        *p_ai_list = &ai;
         return ret_code;
     }
 
     static void freeaddrinfo(AddrInfo*)
     {
-        if (p_is_freed != nullptr) {
-            *p_is_freed = true;
-        }
+        if (p_is_freed) { *p_is_freed = true; }
     }
 };
 
@@ -78,9 +81,7 @@ struct MockSocketProvider : public MockProviderBase
 
     static int close(int)
     {
-        if (p_is_closed != nullptr) {
-            *p_is_closed = true;
-        }
+        if (p_is_closed) { *p_is_closed = true; }
         return SUCCESS;
     }
 

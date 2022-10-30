@@ -5,8 +5,6 @@
 
 namespace alewa::net::test {
 
-MockAddrInfoProvider::AddrInfo const hints{};
-
 std::string api_err_msg(std::string const & msg)
 {
     std::ostringstream ss;
@@ -18,9 +16,9 @@ TEST(addrinfolist_happy_construction)
 {
     try {
         MockAddrInfoProvider api;
-        AddrInfoList ais{api, nullptr, "8080", hints};
+        AddrInfoList ais{api, nullptr, nullptr, nullptr};
 
-        EXPECT_EQ(ais.first(), api.ai_list);
+        EXPECT_EQ(ais.first(), &api.ai);
     }
     catch (std::runtime_error const & e) {
         BUG(std::string("unexpected exception: ") + e.what());
@@ -32,7 +30,7 @@ TEST(addrinfolist_sad_construction)
     try {
         MockAddrInfoProvider api;
         api.ret_code = MockAddrInfoProvider::ERROR;
-        AddrInfoList ais{api, nullptr, "8080", hints};
+        AddrInfoList ais{api, nullptr, nullptr, nullptr};
     }
     catch (std::runtime_error const & e) {
         EXPECT_EQ(e.what(), api_err_msg("getaddrinfo"));
@@ -47,7 +45,7 @@ TEST(addrinfolist_resource_cleanup)
     MockAddrInfoProvider api;
     MockAddrInfoProvider::set_is_freed(&is_freed);
     {
-        AddrInfoList ais{api, nullptr, "8080", hints};
+        AddrInfoList ais{api, nullptr, nullptr, nullptr};
         EXPECT_EQ(is_freed, false);
     }
     MockAddrInfoProvider::set_is_freed(nullptr);
@@ -59,7 +57,7 @@ TEST(socket_happy_construction)
     try {
         MockAddrInfoProvider ai_api;
         ai_api.ai.ai_flags = 0xB00B5; // hehe
-        AddrInfoList ais{ai_api, nullptr, "8080", hints};
+        AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
 
         MockSocketProvider sock_api;
         Socket socket{sock_api, ais};
@@ -76,7 +74,7 @@ TEST(socket_sad_construction)
 {
     try {
         MockAddrInfoProvider ai_api;
-        AddrInfoList ais{ai_api, nullptr, "8080", hints};
+        AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
 
         MockSocketProvider sock_api;
         sock_api.ret_code = MockSocketProvider::ERROR;
@@ -92,7 +90,7 @@ TEST(socket_sad_construction)
 TEST(socket_resource_cleanup)
 {
     MockAddrInfoProvider ai_api;
-    AddrInfoList ais{ai_api, nullptr, "8080", hints};
+    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
 
     bool is_closed = false;
     MockSocketProvider sock_api;
@@ -109,7 +107,7 @@ TEST(socket_resource_cleanup)
 auto new_sock(MockSocketProvider const & sock_api,
               MockAddrInfoProvider const & ai_api)
 {
-    AddrInfoList ais{ai_api, nullptr, "8080", hints};
+    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
     return Socket{sock_api, ais};
 }
 

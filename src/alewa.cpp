@@ -11,7 +11,7 @@ int main(/*int argc, char* argv[]*/)
     hints.ai_flags = AI_PASSIVE;
 
     SysNetApi api;
-    AddrInfoList<SysNetApi> ais{api, nullptr, "3490", hints};
+    AddrInfoList<SysNetApi> ais{api, nullptr, "3490", &hints};
     Socket<SysNetApi> socket{api, ais};
     socket.bind(api);
 

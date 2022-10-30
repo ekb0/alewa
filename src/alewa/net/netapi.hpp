@@ -27,11 +27,11 @@ concept AddrInfoProvider= requires(T t)
     typename T::AIDeleter;
 
     /* methods */
-    requires requires(char const * node, char const * service,
-                      typename T::AddrInfo const * ref_hints,
-                      typename T::AddrInfo** ref_ai_list)
+    requires requires(char const * p_node, char const * p_service,
+                      typename T::AddrInfo const * p_hints,
+                      typename T::AddrInfo** p_ai_list)
     {
-        { t.getaddrinfo(node, service, ref_hints, ref_ai_list) }
+        { t.getaddrinfo(p_node, p_service, p_hints, p_ai_list) }
         -> std::same_as<int>;
     };
 
@@ -58,11 +58,11 @@ concept SocketProvider = requires(T t)
 
     { t.close(int{}) } -> std::same_as<int>;
 
-    requires requires(int sockfd, typename T::SockAddr const * ref_addr,
+    requires requires(int sockfd, typename T::SockAddr const * addr,
                       typename T::SockLen_t addrlen)
     {
-        { t.bind(sockfd, ref_addr, addrlen) } -> std::same_as<int>;
-        { t.connect(sockfd, ref_addr, addrlen) } -> std::same_as<int>;
+        { t.bind(sockfd, addr, addrlen) } -> std::same_as<int>;
+        { t.connect(sockfd, addr, addrlen) } -> std::same_as<int>;
     };
 };
 
