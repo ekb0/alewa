@@ -52,7 +52,7 @@ std::string pretty_err(std::string const & expr, T const & x, U const & y)
                                                                                \
     static _add_test_##tname call_add_test_##tname;                            \
                                                                                \
-    void (_test_##tname)(std::string& fail_expr)
+    void (_test_##tname)(std::string& fail_expr [[maybe_unused]])
 
 #define EXPECT_EQ(x, y)                                                        \
     if (x != y) {                                                              \

@@ -14,15 +14,9 @@ std::string api_err_msg(std::string const & msg)
 
 TEST(addrinfolist_happy_construction)
 {
-    try {
-        MockAddrInfoProvider api;
-        AddrInfoList ais{api, nullptr, nullptr, nullptr};
-
-        EXPECT_EQ(ais.first(), &api.ai);
-    }
-    catch (std::runtime_error const & e) {
-        BUG(std::string("unexpected exception: ") + e.what());
-    }
+    MockAddrInfoProvider api;
+    AddrInfoList ais{api, nullptr, nullptr, nullptr};
+    EXPECT_EQ(ais.first(), &api.ai);
 }
 
 TEST(addrinfolist_sad_construction)
@@ -54,20 +48,15 @@ TEST(addrinfolist_resource_cleanup)
 
 TEST(socket_happy_construction)
 {
-    try {
-        MockAddrInfoProvider ai_api;
-        ai_api.ai.ai_flags = 0xB00B5; // hehe
-        AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
+    MockAddrInfoProvider ai_api;
+    ai_api.ai.ai_flags = 0xB00B5; // hehe
+    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
 
-        MockSocketProvider sock_api;
-        Socket socket{sock_api, ais};
+    MockSocketProvider sock_api;
+    Socket socket{sock_api, ais};
 
-        EXPECT_EQ(socket.fd(), sock_api.ret_code);
-        EXPECT_EQ(socket.info().ai_flags, ai_api.ai.ai_flags);
-    }
-    catch (std::runtime_error const & e) {
-        BUG(std::string("unexpected exception: ") + e.what());
-    }
+    EXPECT_EQ(socket.fd(), sock_api.ret_code);
+    EXPECT_EQ(socket.info().ai_flags, ai_api.ai.ai_flags);
 }
 
 TEST(socket_sad_construction)
@@ -115,13 +104,8 @@ TEST(socket_happy_bind)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
-    try {
-        Socket socket = new_sock(sock_api, ai_api);
-        socket.bind(sock_api);
-    }
-    catch(std::runtime_error const & e) {
-        BUG(std::string("unexpected exception: ") + e.what());
-    }
+    Socket socket = new_sock(sock_api, ai_api);
+    socket.bind(sock_api);
 }
 
 TEST(socket_sad_bind)
@@ -144,13 +128,8 @@ TEST(socket_happy_connect)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
-    try {
-        Socket socket = new_sock(sock_api, ai_api);
-        socket.connect(sock_api);
-    }
-    catch(std::runtime_error const & e) {
-        BUG(std::string("unexpected exception: ") + e.what());
-    }
+    Socket socket = new_sock(sock_api, ai_api);
+    socket.connect(sock_api);
 }
 
 TEST(socket_sad_connect)

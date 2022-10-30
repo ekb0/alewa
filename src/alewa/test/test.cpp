@@ -10,7 +10,12 @@ static size_t passed = 0;
 void run_test(TestCase const & test)
 {
     std::string fail_expr{};
-    test.run(fail_expr);
+    try {
+        test.run(fail_expr);
+    }
+    catch(std::runtime_error const & e) {
+        fail_expr = std::string("unexpected exception: ") + e.what();                                                           \
+    }
 
     if (!fail_expr.empty()) {
         std::cout << "[ FAIL ] " << test.name << ": " << fail_expr << std::endl;
