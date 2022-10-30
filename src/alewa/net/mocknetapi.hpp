@@ -2,13 +2,13 @@
 
 namespace alewa::net::test {
 
-struct sockaddr_t
+struct sockaddr
 {
     unsigned short sa_family;
     char sa_data[14];
 };
 
-struct addrinfo_t
+struct addrinfo
 {
     int ai_flags;
     int ai_family;
@@ -17,14 +17,14 @@ struct addrinfo_t
     unsigned short ai_addrlen;
     char* ai_canonname;
 
-    struct sockaddr_t* ai_addr;
-    struct addrinfo_t *ai_next = nullptr;
+    struct sockaddr* ai_addr;
+    struct addrinfo *ai_next = nullptr;
 };
 
 struct MockProviderBase
 {
 
-    using addrinfo = addrinfo_t;
+    using AddrInfo = addrinfo;
 
     static constexpr char const * const err = "Error";
 
@@ -38,24 +38,24 @@ struct MockProviderBase
 
 struct MockAddrInfoProvider : public MockProviderBase
 {
-    using addrinfo_deleter [[maybe_unused]] = void(*)(addrinfo*);
+    using AIDeleter [[maybe_unused]] = void(*)(AddrInfo*);
 
-    addrinfo ai{};
-    addrinfo* ai_list = &ai;
+    AddrInfo ai{};
+    AddrInfo* ai_list = &ai;
 
     static bool* p_is_freed;
     static void set_is_freed(bool* val) { p_is_freed = val; }
 
     [[nodiscard]] char const* gai_strerror(int) const { return err; }
 
-    int getaddrinfo(char const*, char const*, addrinfo const*,
-                    addrinfo** ref_ai) const
+    int getaddrinfo(char const*, char const*, AddrInfo const*,
+                    AddrInfo** ref_ai) const
     {
         *ref_ai = ai_list;
         return ret_code;
     }
 
-    static void freeaddrinfo(addrinfo*)
+    static void freeaddrinfo(AddrInfo*)
     {
         if (p_is_freed != nullptr) {
             *p_is_freed = true;
@@ -67,9 +67,9 @@ inline bool* MockAddrInfoProvider::p_is_freed = nullptr;
 
 struct MockSocketProvider : public MockProviderBase
 {
-    using Closer [[maybe_unused]] = int(*)(int);
-    using sockaddr = sockaddr_t;
-    using socklen_t = unsigned short;
+    using SockAddr = sockaddr;
+    using SockLen_t = unsigned short;
+    using SockCloser [[maybe_unused]] = int(*)(int);
 
     static bool* p_is_closed;
     static void set_is_closed(bool* val) { p_is_closed = val; };
@@ -84,8 +84,8 @@ struct MockSocketProvider : public MockProviderBase
         return SUCCESS;
     }
 
-    int bind(int, sockaddr const*, socklen_t) const { return ret_code; }
-    int connect(int, sockaddr const*, socklen_t) const { return ret_code; }
+    int bind(int, SockAddr const*, SockLen_t) const { return ret_code; }
+    int connect(int, SockAddr const*, SockLen_t) const { return ret_code; }
 };
 
 inline bool* MockSocketProvider::p_is_closed = nullptr;

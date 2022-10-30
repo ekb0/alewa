@@ -12,25 +12,22 @@ template <AddrInfoProvider T>
 class AddrInfoList
 {
 private:
-    std::unique_ptr<typename T::addrinfo, typename T::addrinfo_deleter> p_ai;
+    using AddrInfo = typename T::AddrInfo;
+    std::unique_ptr<AddrInfo, typename T::AIDeleter> p_ai;
 
 public:
     AddrInfoList(T const & api, char const * node, char const * service,
-                 typename T::addrinfo const & hints);
+                 AddrInfo const & hints);
 
-    auto first() const -> typename T::addrinfo const *
-    {
-        return p_ai.get();
-    }
+    auto first() const -> AddrInfo const * { return p_ai.get(); }
 };
 
 template <AddrInfoProvider T>
 AddrInfoList<T>::AddrInfoList(T const & api, char const * node,
-                              char const * service,
-                              typename T::addrinfo const & hints)
+                              char const * service, AddrInfo const & hints)
         : p_ai(nullptr, api.freeaddrinfo)
 {
-    typename T::addrinfo * l = nullptr;
+    AddrInfo * l = nullptr;
     int ret = api.getaddrinfo(node, service, &hints, &l);
     if (ret != T::SUCCESS) {
         std::ostringstream err;
@@ -44,11 +41,12 @@ template <SocketProvider T, AddrInfoProvider U = T>
 class Socket
 {
 private:
+    using AddrInfo = typename T::AddrInfo;
     static int const NULL_FD = -1;
 
     int sockfd;
-    typename T::Closer release;
-    std::unique_ptr<typename T::addrinfo> ref_ai;
+    typename T::SockCloser release;
+    std::unique_ptr<AddrInfo> ref_ai;
 
 public:
     Socket(T const & api, AddrInfoList<U> const & ais);
@@ -61,10 +59,7 @@ public:
     Socket& operator=(Socket&& other) noexcept;
 
     [[nodiscard]] auto fd() const -> int { return sockfd; }
-    [[nodiscard]] auto info() const -> typename T::addrinfo const &
-    {
-        return *ref_ai;
-    }
+    [[nodiscard]] auto info() const -> AddrInfo const & { return *ref_ai; }
 
     void bind(T const & api);
     void connect(T const & api);
@@ -76,7 +71,7 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
 {
     int ret = T::ERROR;
 
-    typename T::addrinfo const * it;
+    AddrInfo const * it;
     for (it = ais.first(); it != nullptr; it = it->ai_next) {
         ret = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
         if (ret != T::ERROR) { break; }
@@ -88,7 +83,7 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
         throw std::runtime_error(err.str());
     }
     sockfd = ret;
-    ref_ai = std::make_unique<typename T::addrinfo>(*it);
+    ref_ai = std::make_unique<AddrInfo>(*it);
     ref_ai->ai_next = nullptr;
 }
 
@@ -108,12 +103,12 @@ Socket<T, U>::Socket(Socket&& other) noexcept
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-auto Socket<T,U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
+auto Socket<T, U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 {
     assert(other.ref_ai != nullptr);
 
     std::swap(sockfd, other.sockfd);
-    release = other.release;
+    std::swap(release, other.release);
     ref_ai = std::move(other.ref_ai);
     return *this;
 }

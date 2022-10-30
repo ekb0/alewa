@@ -5,7 +5,7 @@
 
 namespace alewa::net::test {
 
-MockAddrInfoProvider::addrinfo const hints{};
+MockAddrInfoProvider::AddrInfo const hints{};
 
 std::string api_err_msg(std::string const & msg)
 {

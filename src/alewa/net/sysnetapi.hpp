@@ -10,12 +10,12 @@ namespace alewa::net {
 struct SysNetApi
 {
     /* types */
-    using addrinfo = ::addrinfo;
-    using addrinfo_deleter [[maybe_unused]] = decltype(&::freeaddrinfo);
-    using Closer [[maybe_unused]] = decltype(&::close);
+    using AddrInfo = ::addrinfo;
+    using AIDeleter [[maybe_unused]] = decltype(&::freeaddrinfo);
 
-    using sockaddr [[maybe_unused]] = ::sockaddr;
-    using socklen_t [[maybe_unused]] = ::socklen_t;
+    using SockAddr [[maybe_unused]] = ::sockaddr;
+    using SockLen_t [[maybe_unused]] = ::socklen_t;
+    using SockCloser [[maybe_unused]] = decltype(&::close);
 
     /* constants */
     static int const ERROR = -1;
