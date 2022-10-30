@@ -67,23 +67,27 @@ inline bool* MockAddrInfoProvider::p_is_freed = nullptr;
 
 struct MockSocketProvider : public MockProviderBase
 {
+    using Closer [[maybe_unused]] = int(*)(int);
     using sockaddr = sockaddr_t;
     using socklen_t = unsigned short;
 
-    bool* p_is_closed = nullptr;
-    void set_is_closed(bool* val) { p_is_closed = val; };
+    static bool* p_is_closed;
+    static void set_is_closed(bool* val) { p_is_closed = val; };
 
     [[nodiscard]] int socket (int, int, int) const { return ret_code; }
-    int close(int) const
+
+    static int close(int)
     {
         if (p_is_closed != nullptr) {
             *p_is_closed = true;
         }
-        return ret_code;
+        return SUCCESS;
     }
 
     int bind(int, sockaddr const*, socklen_t) const { return ret_code; }
     int connect(int, sockaddr const*, socklen_t) const { return ret_code; }
 };
+
+inline bool* MockSocketProvider::p_is_closed = nullptr;
 
 } // namespace alewa::net::test

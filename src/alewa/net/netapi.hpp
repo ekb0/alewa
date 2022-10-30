@@ -49,6 +49,7 @@ concept SocketProvider = requires(T t)
     requires ProviderBase<T>;
 
     /* types */
+    typename T::Closer;
     typename T::sockaddr;
     typename T::socklen_t;
 

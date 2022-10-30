@@ -47,7 +47,7 @@ private:
     static int const NULL_FD = -1;
 
     int sockfd;
-    T const & api;
+    typename T::Closer release;
     std::unique_ptr<typename T::addrinfo> ref_ai;
 
 public:
@@ -66,12 +66,13 @@ public:
         return *ref_ai;
     }
 
-    void bind();
-    void connect();
+    void bind(T const & api);
+    void connect(T const & api);
 };
 
 template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(api)
+Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
+        : release(api.close)
 {
     int ret = T::ERROR;
 
@@ -94,12 +95,13 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(api)
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::~Socket()
 {
-    if (sockfd != NULL_FD) { api.close(sockfd); } // TODO: stderr if this fails
+    if (sockfd != NULL_FD) { release(sockfd); } /* TODO: stderr if this fails */
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::Socket(Socket&& other) noexcept
-        : sockfd(other.sockfd), api(other.api), ref_ai(std::move(other.ref_ai))
+        : sockfd(other.sockfd), release(other.release),
+          ref_ai(std::move(other.ref_ai))
 {
     assert(ref_ai != nullptr);
     other.sockfd = NULL_FD;
@@ -109,14 +111,15 @@ template <SocketProvider T, AddrInfoProvider U>
 auto Socket<T,U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 {
     assert(other.ref_ai != nullptr);
-    this->api = other.api;
-    this->ref_ai = std::move(other.ref_ai);
-    std::swap(this->sockfd, other.sockfd);
+
+    std::swap(sockfd, other.sockfd);
+    release = other.release;
+    ref_ai = std::move(other.ref_ai);
     return *this;
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::bind()
+void Socket<T, U>::bind(T const & api)
 {
     int ret = api.bind(sockfd, ref_ai->ai_addr, ref_ai->ai_addrlen);
     if (ret == T::ERROR) {
@@ -127,7 +130,7 @@ void Socket<T, U>::bind()
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::connect()
+void Socket<T, U>::connect(T const & api)
 {
     int ret = api.connect(sockfd, ref_ai->ai_addr, ref_ai->ai_addrlen);
     if (ret == T::ERROR) {

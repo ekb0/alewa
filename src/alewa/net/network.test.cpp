@@ -96,10 +96,12 @@ TEST(socket_resource_cleanup)
 
     bool is_closed = false;
     MockSocketProvider sock_api;
-    sock_api.set_is_closed(&is_closed);
+    MockSocketProvider::set_is_closed(&is_closed);
 
     Socket socket{sock_api, ais};
     socket.~Socket();
+
+    MockSocketProvider::set_is_closed(nullptr);
 
     EXPECT_EQ(is_closed, true);
 }
@@ -117,7 +119,7 @@ TEST(socket_happy_bind)
     MockAddrInfoProvider ai_api;
     try {
         Socket socket = new_sock(sock_api, ai_api);
-        socket.bind();
+        socket.bind(sock_api);
     }
     catch(std::runtime_error const & e) {
         BUG(std::string("unexpected exception: ") + e.what());
@@ -131,7 +133,7 @@ TEST(socket_sad_bind)
     try {
         Socket socket = new_sock(sock_api, ai_api);
         sock_api.ret_code = MockSocketProvider::ERROR;
-        socket.bind();
+        socket.bind(sock_api);
     }
     catch(std::runtime_error const & e) {
         EXPECT_EQ(e.what(), api_err_msg("bind"));
@@ -146,7 +148,7 @@ TEST(socket_happy_connect)
     MockAddrInfoProvider ai_api;
     try {
         Socket socket = new_sock(sock_api, ai_api);
-        socket.connect();
+        socket.connect(sock_api);
     }
     catch(std::runtime_error const & e) {
         BUG(std::string("unexpected exception: ") + e.what());
@@ -160,7 +162,7 @@ TEST(socket_sad_connect)
     try {
         Socket socket = new_sock(sock_api, ai_api);
         sock_api.ret_code = MockSocketProvider::ERROR;
-        socket.connect();
+        socket.connect(sock_api);
     }
     catch(std::runtime_error const & e) {
         EXPECT_EQ(e.what(), api_err_msg("connect"));
