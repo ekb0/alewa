@@ -29,14 +29,11 @@ concept AddrInfoProvider= requires(T const t)
     /* methods */
     requires requires(char const * p_node, char const * p_service,
                       typename T::AddrInfo const * p_hints,
-                      typename T::AddrInfo** p_ai_list)
+                      typename T::AddrInfo** p_ai_list,
+                      typename T::AddrInfo* ai_list)
     {
         { t.getaddrinfo(p_node, p_service, p_hints, p_ai_list) }
         -> std::same_as<int>;
-    };
-
-    requires requires(typename T::AddrInfo* ai_list)
-    {
         { T::freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
 
@@ -55,14 +52,17 @@ concept SocketProvider = requires(T const t)
 
     /* methods */
     { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
-
     { T::close(int{}) } -> std::same_as<int>;
 
-    requires requires(int sockfd, typename T::SockAddr const * addr,
-                      typename T::SockLen_t addrlen)
+    requires requires(typename T::SockAddr const * addr,
+                      typename T::SockAddr* p_addr,
+                      typename T::SockLen_t addrlen,
+                      typename T::SockLen_t* p_addrlen)
     {
-        { t.bind(sockfd, addr, addrlen) } -> std::same_as<int>;
-        { t.connect(sockfd, addr, addrlen) } -> std::same_as<int>;
+        { t.bind(int{}, addr, addrlen) } -> std::same_as<int>;
+        { t.connect(int{}, addr, addrlen) } -> std::same_as<int>;
+        { t.listen(int{}, int{}) } -> std::same_as<int>;
+        { t.accept(int{}, p_addr, p_addrlen) } -> std::same_as<int>;
     };
 };
 

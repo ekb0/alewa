@@ -36,6 +36,8 @@ struct SysNetApi
     SYSNET_DELEGATE(socket, ::socket);
     SYSNET_DELEGATE(bind, ::bind);
     SYSNET_DELEGATE(connect, ::connect);
+    SYSNET_DELEGATE(listen, ::listen);
+    SYSNET_DELEGATE(accept, ::accept);
 };
 
 }  // namespace alewa::net

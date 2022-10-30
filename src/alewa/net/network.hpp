@@ -19,7 +19,7 @@ public:
     AddrInfoList(T const & api, char const * p_node, char const * p_service,
                  AddrInfo const * p_hints);
 
-    auto first() const -> AddrInfo const * { return p_ai.get(); }
+    auto first() const noexcept -> AddrInfo const * { return p_ai.get(); }
 };
 
 template <AddrInfoProvider T>
@@ -42,11 +42,16 @@ class Socket
 {
 private:
     using AddrInfo = typename T::AddrInfo;
-    static int const NULL_FD = -1;
+    using SockAddr = typename T::SockAddr;
+    using SockCloser = typename T::SockCloser;
+
+    static int const NULL_FD = T::ERROR;
 
     int sockfd;
-    typename T::SockCloser release;
+    SockCloser release;
     std::unique_ptr<AddrInfo const> ai;
+
+    Socket(int sockfd, SockCloser const & closer, AddrInfo const & ai);
 
 public:
     Socket(T const & api, AddrInfoList<U> const & ais);
@@ -58,43 +63,60 @@ public:
     Socket(Socket&& other) noexcept;
     Socket& operator=(Socket&& other) noexcept;
 
-    [[nodiscard]] auto fd() const -> int { return sockfd; }
-    [[nodiscard]] auto info() const -> AddrInfo const & { return *ai; }
+    [[nodiscard]] auto fd() const noexcept -> int { return sockfd; }
+    [[nodiscard]] auto info() const noexcept -> AddrInfo const & { return *ai; }
 
-    void bind(T const & api);
-    void connect(T const & api);
+    void bind(T const & api, AddrInfo const & target);
+    void connect(T const & api, AddrInfo const & target);
+
+    void bind(T const & api) { bind(api, *ai); }
+    void connect(T const & api) { connect(api, *ai); }
+
+    void listen(T const & api, int backlog);
+    Socket accept(T const & api);
 };
+
+template <SocketProvider T, AddrInfoProvider U>
+Socket<T, U>::Socket(int sockfd, SockCloser const & closer, AddrInfo const & ai)
+        : sockfd(sockfd), release(closer),
+          ai(std::make_unique<AddrInfo const>(ai))
+{}
+
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais)
         : release(T::close)
 {
-    int ret = T::ERROR;
+    int fd = T::ERROR;
     std::unique_ptr<AddrInfo> p_ai = nullptr;
 
     AddrInfo const * it;
     for (it = ais.first(); it != nullptr; it = it->ai_next) {
-        ret = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-        if (ret != T::ERROR) {
+        fd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
+        if (fd != T::ERROR) {
             p_ai = std::make_unique<AddrInfo>(*it);
+            p_ai->ai_addr = nullptr;
             p_ai->ai_next = nullptr;
             break;
         }
     }
 
-    if (ret == T::ERROR) {
+    if (fd == T::ERROR) {
         std::ostringstream err;
         err << "socket: " << api.error() << std::endl;
         throw std::runtime_error(err.str());
     }
-    sockfd = ret;
+    sockfd = fd;
     ai = std::move(p_ai);
 }
 
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::~Socket()
 {
-    if (sockfd != NULL_FD) { release(sockfd); } /* TODO: stderr if this fails */
+    if (sockfd != NULL_FD) {
+        if (ai->ai_addr) { delete ai->ai_addr; }
+        release(sockfd); /* TODO: stderr if this fails */
+    }
 }
 
 template <SocketProvider T, AddrInfoProvider U>
@@ -116,9 +138,9 @@ auto Socket<T, U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::bind(T const & api)
+void Socket<T, U>::bind(T const & api, AddrInfo const & target)
 {
-    int ret = api.bind(sockfd, ai->ai_addr, ai->ai_addrlen);
+    int ret = api.bind(sockfd, target.ai_addr, target.ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
         err << "bind: " << api.error() << std::endl;
@@ -127,14 +149,38 @@ void Socket<T, U>::bind(T const & api)
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::connect(T const & api)
+void Socket<T, U>::connect(T const & api, AddrInfo const & target)
 {
-    int ret = api.connect(sockfd, ai->ai_addr, ai->ai_addrlen);
+    int ret = api.connect(sockfd, target.ai_addr, target.ai_addrlen);
     if (ret == T::ERROR) {
         std::ostringstream err;
         err << "connect: " << api.error() << std::endl;
         throw std::runtime_error(err.str());
     }
+}
+
+template <SocketProvider T, AddrInfoProvider U>
+void Socket<T, U>::listen(T const & api, int backlog)
+{
+    int ret = api.listen(sockfd, backlog);
+    if (ret == T::ERROR) {
+        std::ostringstream err;
+        err << "listen: " << api.error() << std::endl;
+        throw std::runtime_error(err.str());
+    }
+}
+
+template <SocketProvider T, AddrInfoProvider U>
+auto Socket<T, U>::accept(T const & api) -> Socket<T, U>
+{
+    AddrInfo tmp{};
+    tmp.ai_addr = new SockAddr{};  /* lol, "modern" c++ */
+    int fd = api.accept(sockfd, tmp.ai_addr, &tmp.ai_addrlen);
+    if (fd == T::ERROR) {
+        delete tmp.ai_addr;
+        throw fd;
+    }
+    return Socket{fd, release, tmp};
 }
 
 }  // namespace alewa::net

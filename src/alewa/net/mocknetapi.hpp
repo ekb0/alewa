@@ -23,17 +23,18 @@ struct addrinfo
     unsigned short ai_addrlen;
     char* ai_canonname;
 
-    struct sockaddr* ai_addr;
-    struct addrinfo *ai_next = nullptr;
+    sockaddr* ai_addr;
+    addrinfo *ai_next = nullptr;
 };
 
 struct MockProviderBase
 {
 
     using AddrInfo = addrinfo;
+    mutable AddrInfo ai{};
 
-    static int const ERROR = -1;
-    static int const SUCCESS = 0;
+    static int const ERROR;
+    static int const SUCCESS;
 
     [[nodiscard]] auto error() const -> char const * { return err; }
 
@@ -41,11 +42,12 @@ struct MockProviderBase
     int ret_code = SUCCESS;
 };
 
+inline int const MockProviderBase::ERROR = -1;
+inline int const MockProviderBase::SUCCESS = 0;
+
 struct MockAddrInfoProvider : public MockProviderBase
 {
     using AIDeleter [[maybe_unused]] = void(*)(AddrInfo*);
-
-    mutable AddrInfo ai{};
 
     static bool* p_is_freed;
     static void set_is_freed(bool* val) { p_is_freed = val; }
@@ -86,6 +88,15 @@ struct MockSocketProvider : public MockProviderBase
 
     int bind(int, SockAddr const*, SockLen_t) const { return ret_code; }
     int connect(int, SockAddr const*, SockLen_t) const { return ret_code; }
+    int listen(int, int) const { return ret_code; }
+
+    int accept(int, SockAddr* p_addr, SockLen_t* p_addrlen) const
+    {
+        if (ret_code == ERROR) { return ret_code; }
+        *p_addr = *ai.ai_addr;
+        *p_addrlen = sizeof(SockLen_t);
+        return ret_code;
+    }
 };
 
 inline bool* MockSocketProvider::p_is_closed = nullptr;
