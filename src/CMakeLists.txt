@@ -2,6 +2,7 @@ add_library(alewa_compiler_flags INTERFACE)
 
 target_compile_options(alewa_compiler_flags
     INTERFACE
+        -O3
         -Wall
         -Wextra
         -Wconversion

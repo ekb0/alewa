@@ -20,7 +20,7 @@ struct SysNetApi
     static int const SUCCESS = 0;
 
     [[nodiscard]] auto error(int err) const -> std::string;
-    [[nodiscard]] int err_no() const;
+    [[nodiscard]] auto err_no() const -> int;
 
     /* AddrInfoProvider */
     using AIDeleter [[maybe_unused]] = decltype(&::freeaddrinfo);

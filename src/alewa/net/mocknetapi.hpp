@@ -4,12 +4,6 @@
 
 namespace alewa::net::test {
 
-/*
- * WARNING:
- * The providers in this class are stack based. When used for tests, they should
- * never go out of scope before the instances they have been used to create.
- */
-
 struct sockaddr
 {
     unsigned short sa_family;

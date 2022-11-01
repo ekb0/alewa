@@ -24,8 +24,8 @@ TEST(addrinfolist_construction)
 
 TEST(addrinfolist_resource_cleanup)
 {
-    bool is_freed = false;
     MockAddrInfoProvider api;
+    bool is_freed = false;
     MockAddrInfoProvider::set_is_freed(&is_freed);
     {
         AddrInfoList ais{api, nullptr, nullptr, nullptr};
@@ -38,9 +38,9 @@ TEST(addrinfolist_resource_cleanup)
 TEST(socket_construction)
 {
     MockAddrInfoProvider ai_api;
+    MockSocketProvider sock_api;
     ai_api.ai.ai_flags = 0xB00B5; // hehe
     AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
-    MockSocketProvider sock_api;
 
     Socket happy{sock_api, ais};
     EXPECT_EQ(happy.fd(), sock_api.ret_code);
@@ -60,10 +60,10 @@ TEST(socket_construction)
 TEST(socket_resource_cleanup)
 {
     MockAddrInfoProvider ai_api;
-    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
-    bool is_closed = false;
     MockSocketProvider sock_api;
+    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
 
+    bool is_closed = false;
     MockSocketProvider::set_is_closed(&is_closed);
     {
         Socket socket{sock_api, ais};
