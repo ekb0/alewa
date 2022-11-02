@@ -79,17 +79,19 @@ Socket<T, U>::Socket(T const & api, int sockfd, AddrInfo const & ai)
 template <SocketProvider T, AddrInfoProvider U>
 Socket<T, U>::Socket(T const & api, AddrInfoList<U> const & ais) : api(api)
 {
-    AddrInfo const * it;
-    for (it = ais.first(); it != nullptr; it = it->ai_next) {
+    AddrInfo const * it = ais.first();
+    while (it) {
         sockfd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-        if (sockfd != NULL_FD) {
-            std::unique_ptr<AddrInfo> p_ai = std::make_unique<AddrInfo>(*it);
-            p_ai->ai_addr = nullptr;
-            p_ai->ai_next = nullptr;
-
-            ai = std::move(p_ai);
-            return;
+        if (sockfd == NULL_FD) {
+            it = it->ai_next;
+            continue;
         }
+        std::unique_ptr<AddrInfo> p_ai = std::make_unique<AddrInfo>(*it);
+        p_ai->ai_addr = nullptr;
+        p_ai->ai_next = nullptr;
+
+        ai = std::move(p_ai);
+        return;
     }
     throw api.err_no();
 }
