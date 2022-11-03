@@ -27,7 +27,7 @@ void run_test(TestCase const & test)
 
 int main()
 {
-    std::for_each(tests.begin(), tests.end(), run_test);
+    for (auto const & test : tests) { run_test(test); }
     std::cout << std::endl << passed << " out of " << tests.size() << " passed"
               << std::endl;
 

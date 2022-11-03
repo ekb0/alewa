@@ -4,14 +4,12 @@ add_library(alewa_linker_flags INTERFACE)
 target_compile_options(alewa_compiler_flags
     INTERFACE
         -g
-        -O3
         -Wall
         -Werror
         -Wextra
         -Wconversion
         -pedantic-errors
         -fsanitize=address
-        -D_FORTIFY_SOURCE=2
         -D_GLIBCXX_ASSERTIONS
     )
 

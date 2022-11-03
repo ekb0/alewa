@@ -9,7 +9,7 @@ TEST(addrinfolist_construction)
 {
     MockAddrInfoProvider api;
     AddrInfoList happy{api, nullptr, nullptr, nullptr};
-    EXPECT_EQ(happy.first(), &api.ai);
+    EXPECT_EQ(happy.cur(), &api.ai);
 
     try {
         api.ret_code = MockAddrInfoProvider::ERROR;
@@ -28,7 +28,7 @@ TEST(addrinfolist_resource_cleanup)
     bool is_freed = false;
     MockAddrInfoProvider::set_is_freed(&is_freed);
     {
-        AddrInfoList ais{api, nullptr, nullptr, nullptr};
+        AddrInfoList spec{api, nullptr, nullptr, nullptr};
         EXPECT_EQ(is_freed, false);
     }
     MockAddrInfoProvider::set_is_freed(nullptr);
@@ -39,16 +39,14 @@ TEST(socket_construction)
 {
     MockAddrInfoProvider ai_api;
     MockSocketProvider sock_api;
-    ai_api.ai.ai_flags = 0xB00B5; // hehe
-    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
 
-    Socket happy{sock_api, ais};
+    Socket happy{sock_api, spec};
     EXPECT_EQ(happy.fd(), sock_api.ret_code);
-    EXPECT_EQ(happy.info().ai_flags, ai_api.ai.ai_flags);
 
     try {
         sock_api.ret_code = MockSocketProvider::ERROR;
-        Socket sad{sock_api, ais};
+        Socket sad{sock_api, spec};
     }
     catch (int e) {
         EXPECT_EQ(e, sock_api.errorno);
@@ -61,36 +59,30 @@ TEST(socket_resource_cleanup)
 {
     MockAddrInfoProvider ai_api;
     MockSocketProvider sock_api;
-    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
 
     bool is_closed = false;
     MockSocketProvider::set_is_closed(&is_closed);
     {
-        Socket socket{sock_api, ais};
+        Socket socket{sock_api, spec};
         EXPECT_EQ(is_closed, false);
     }
     EXPECT_EQ(is_closed, true);
     MockSocketProvider::set_is_closed(nullptr);
 }
 
-auto new_sock(MockSocketProvider const & sock_api,
-              MockAddrInfoProvider const & ai_api)
-{
-    AddrInfoList ais{ai_api, nullptr, nullptr, nullptr};
-    return Socket{sock_api, ais};
-}
-
 TEST(socket_bind)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
-    Socket happy = new_sock(sock_api, ai_api);
-    happy.bind();
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
 
+    Socket happy{sock_api, spec};
+    happy.bind(*spec.cur());
     try {
-        Socket sad = new_sock(sock_api, ai_api);
+        Socket sad{sock_api, spec};
         sock_api.ret_code = MockSocketProvider::ERROR;
-        sad.bind();
+        sad.bind(*spec.cur());
     }
     catch (int e) {
         EXPECT_EQ(e, sock_api.errorno);
@@ -103,12 +95,14 @@ TEST(socket_connect)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
-    Socket happy = new_sock(sock_api, ai_api);
-    happy.connect();
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+
+    Socket happy{sock_api, spec};
+    happy.connect(*spec.cur());
     try {
-        Socket sad = new_sock(sock_api, ai_api);
+        Socket sad{sock_api, spec};
         sock_api.ret_code = MockSocketProvider::ERROR;
-        sad.connect();
+        sad.connect(*spec.cur());
     }
     catch (int e) {
         EXPECT_EQ(e, sock_api.errorno);
@@ -121,10 +115,12 @@ TEST(socket_listen)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
-    Socket happy = new_sock(sock_api, ai_api);
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+
+    Socket happy{sock_api, spec};
     happy.listen(0);
     try {
-        Socket sad = new_sock(sock_api, ai_api);
+        Socket sad{sock_api, spec};
         sock_api.ret_code = MockSocketProvider::ERROR;
         sad.listen(0);
     }
@@ -139,17 +135,22 @@ TEST(socket_accept)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+    Socket sock{sock_api, spec};
+
     sockaddr addr = {0xB00, {0,69,2}};
     sock_api.ai.ai_addr = &addr;
-    Socket sock = new_sock(sock_api, ai_api);
 
-    Socket happy = sock.accept();
-    EXPECT_EQ(happy.info().ai_addr->sa_family, addr.sa_family);
-    EXPECT_EQ(happy.info().ai_addr->sa_data[1], addr.sa_data[1]);
+    SockInfo<MockSocketProvider> happy_info{};
+    Socket happy = sock.accept(happy_info);
+
+    EXPECT_EQ(happy_info.addr.sa_family, addr.sa_family);
+    EXPECT_EQ(happy_info.addr.sa_data[1], addr.sa_data[1]);
 
     try {
+        SockInfo<MockSocketProvider> sad_info{};
         sock_api.ret_code = MockSocketProvider::ERROR;
-        sock.accept();
+        sock.accept(sad_info);
     }
     catch(int e) {
         EXPECT_EQ(e, sock_api.errorno);
