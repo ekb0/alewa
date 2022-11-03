@@ -95,7 +95,7 @@ struct MockSocketProvider : public MockProviderBase
 
     int accept(int, SockAddr* p_addr, SockLen_t* p_addrlen) const
     {
-        if (ret_code == ERROR) { return ret_code; }
+        if (ERROR == ret_code) { return ret_code; }
         *p_addr = *ai.ai_addr;
         *p_addrlen = sizeof(SockLen_t);
         return ret_code;
