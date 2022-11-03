@@ -1,12 +1,23 @@
 add_library(alewa_compiler_flags INTERFACE)
+add_library(alewa_linker_flags INTERFACE)
 
 target_compile_options(alewa_compiler_flags
     INTERFACE
+        -g
         -O3
         -Wall
+        -Werror
         -Wextra
         -Wconversion
         -pedantic-errors
+        -fsanitize=address
+        -D_FORTIFY_SOURCE=2
+        -D_GLIBCXX_ASSERTIONS
+    )
+
+target_link_options(alewa_linker_flags
+    INTERFACE
+        -fsanitize=address
 )
 
 add_executable(alewa
@@ -19,6 +30,7 @@ add_executable(alewa
 target_link_libraries(alewa
     PRIVATE
         alewa_compiler_flags
+        alewa_linker_flags
 )
 
 target_include_directories(alewa
@@ -34,6 +46,7 @@ add_executable(alewa_test
 target_link_libraries(alewa_test
     PRIVATE
         alewa_compiler_flags
+        alewa_linker_flags
 )
 
 target_include_directories(alewa_test
