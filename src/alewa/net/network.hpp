@@ -72,8 +72,8 @@ public:
     Socket(Socket&& other) noexcept;
     Socket& operator=(Socket&& other) noexcept;
 
-    void bind(AddrInfoList<U> const & target);
-    void connect(AddrInfoList<U> const & target);
+    void bind(AddrInfoList<U>& target);
+    void connect(AddrInfoList<U>& target);
 
     void bind(AddrInfo const & target);
     void connect(AddrInfo const & target);
@@ -118,7 +118,7 @@ auto Socket<T, U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::bind(AddrInfoList<U> const & target)
+void Socket<T, U>::bind(AddrInfoList<U>& target)
 {
     AddrInfo const * it = target.cur();
     for (; it != nullptr; it = target.advance()) {
@@ -130,7 +130,7 @@ void Socket<T, U>::bind(AddrInfoList<U> const & target)
 }
 
 template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::connect(AddrInfoList<U> const & target)
+void Socket<T, U>::connect(AddrInfoList<U>& target)
 {
     AddrInfo const * it = target.cur();
     for (; it != nullptr; it = target.advance()) {

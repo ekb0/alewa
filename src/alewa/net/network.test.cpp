@@ -71,11 +71,54 @@ TEST(socket_resource_cleanup)
     MockSocketProvider::set_is_closed(nullptr);
 }
 
-TEST(socket_bind)
+TEST(socket_move)
+{
+    MockAddrInfoProvider ai_api;
+    MockSocketProvider sock_api;
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+    Socket socket1{sock_api, spec};
+    Socket socket2{sock_api, spec};
+
+    bool is_closed = false;
+    MockSocketProvider::set_is_closed(&is_closed);
+
+    Socket newSocket = std::move(socket1);
+    socket1.~Socket();  // NULL_FD
+    EXPECT_EQ(is_closed, false);
+
+    newSocket = std::move(socket2);
+    socket2.~Socket();  // Has socket1's fd
+    EXPECT_EQ(is_closed, true);
+    is_closed = false;
+
+    MockSocketProvider::set_is_closed(nullptr);
+}
+
+TEST(socket_bind_addrinfolist)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
     AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+
+    Socket happy{sock_api, spec};
+    happy.bind(spec);
+    try {
+        Socket sad{sock_api, spec};
+        sock_api.ret_code = MockSocketProvider::ERROR;
+        sad.bind(spec);
+    }
+    catch (int e) {
+        EXPECT_EQ(e, sock_api.errorno);
+        return;
+    }
+    BUG(std::string("sad bind did not throw"));
+}
+
+TEST(socket_bind)
+{
+    MockAddrInfoProvider ai_api;
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+    MockSocketProvider sock_api;
 
     Socket happy{sock_api, spec};
     happy.bind(*spec.cur());
@@ -91,11 +134,31 @@ TEST(socket_bind)
     BUG(std::string("sad bind did not throw"));
 }
 
-TEST(socket_connect)
+TEST(socket_connect_addrinfolist)
 {
     MockSocketProvider sock_api;
     MockAddrInfoProvider ai_api;
     AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+
+    Socket happy{sock_api, spec};
+    happy.connect(spec);
+    try {
+        Socket sad{sock_api, spec};
+        sock_api.ret_code = MockSocketProvider::ERROR;
+        sad.connect(spec);
+    }
+    catch (int e) {
+        EXPECT_EQ(e, sock_api.errorno);
+        return;
+    }
+    BUG(std::string("sad connect did not throw"));
+}
+
+TEST(socket_connect)
+{
+    MockAddrInfoProvider ai_api;
+    AddrInfoList spec{ai_api, nullptr, nullptr, nullptr};
+    MockSocketProvider sock_api;
 
     Socket happy{sock_api, spec};
     happy.connect(*spec.cur());
