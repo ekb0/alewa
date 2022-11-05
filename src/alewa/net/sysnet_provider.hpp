@@ -8,12 +8,12 @@
 
 namespace alewa::net {
 
-struct SysNetApi
+struct SystemNetworkProvider
 {
     #define SYSNET_DELEGATE(func, delegate)                                    \
             decltype(&(delegate)) const func = (delegate)
 
-    /* ProviderBase */
+    /* NetworkProvider */
     using AddrInfo = ::addrinfo;
 
     static int const ERROR = -1;

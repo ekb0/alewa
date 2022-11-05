@@ -23,10 +23,13 @@ struct addrinfo
     addrinfo *ai_next = nullptr;
 };
 
-struct MockProviderBase
+struct MockNetworkProvider
 {
-
     using AddrInfo = addrinfo;
+    using AIDeleter [[maybe_unused]] = void(*)(AddrInfo*);
+    using SockAddr = sockaddr;
+    using SockLen_t = unsigned short;
+
     mutable AddrInfo ai{};
 
     static int const ERROR;
@@ -43,15 +46,7 @@ struct MockProviderBase
     static constexpr char const * const err = "Error";
     int ret_code = SUCCESS;
     int errorno = ERRORNO;
-};
 
-inline int const MockProviderBase::ERROR = -1;
-inline int const MockProviderBase::SUCCESS = 0;
-inline int const MockProviderBase::ERRORNO = -5;
-
-struct MockAddrInfoProvider : public MockProviderBase
-{
-    using AIDeleter [[maybe_unused]] = void(*)(AddrInfo*);
 
     static bool* p_is_freed;
     static void set_is_freed(bool* val) { p_is_freed = val; }
@@ -69,14 +64,6 @@ struct MockAddrInfoProvider : public MockProviderBase
     {
         if (p_is_freed) { *p_is_freed = true; }
     }
-};
-
-inline bool* MockAddrInfoProvider::p_is_freed = nullptr;
-
-struct MockSocketProvider : public MockProviderBase
-{
-    using SockAddr = sockaddr;
-    using SockLen_t = unsigned short;
 
     static bool* p_is_closed;
     static void set_is_closed(bool* val) { p_is_closed = val; };
@@ -102,6 +89,11 @@ struct MockSocketProvider : public MockProviderBase
     }
 };
 
-inline bool* MockSocketProvider::p_is_closed = nullptr;
+inline int const MockNetworkProvider::ERROR = -1;
+inline int const MockNetworkProvider::SUCCESS = 0;
+inline int const MockNetworkProvider::ERRORNO = -5;
+
+inline bool* MockNetworkProvider::p_is_freed = nullptr;
+inline bool* MockNetworkProvider::p_is_closed = nullptr;
 
 } // namespace alewa::net::test

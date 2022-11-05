@@ -3,11 +3,11 @@
 #include <memory>
 #include <cassert>
 
-#include "netapi.hpp"
+#include "net_provider.hpp"
 
 namespace alewa::net {
 
-template <AddrInfoProvider T>
+template <NetworkProvider T>
 class AddrInfoList
 {
 private:
@@ -43,14 +43,14 @@ public:
     [[maybe_unused]] void reset() noexcept { iter = head.get(); }
 };
 
-template <SocketProvider T>
+template <NetworkProvider T>
 struct SockInfo
 {
     typename T::SockAddr addr;
     typename T::SockLen_t addrlen;
 };
 
-template <SocketProvider T, AddrInfoProvider U = T>
+template <NetworkProvider T>
 class Socket
 {
 private:
@@ -63,7 +63,7 @@ private:
     Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};
 
 public:
-    Socket(T const & api, AddrInfoList<U>& spec);
+    Socket(T const & api, AddrInfoList<T>& spec);
     ~Socket();
 
     Socket(Socket&) = delete;
@@ -72,8 +72,8 @@ public:
     Socket(Socket&& other) noexcept;
     Socket& operator=(Socket&& other) noexcept;
 
-    void bind(AddrInfoList<U>& target);
-    void connect(AddrInfoList<U>& target);
+    void bind(AddrInfoList<T>& target);
+    void connect(AddrInfoList<T>& target);
 
     void bind(AddrInfo const & target);
     void connect(AddrInfo const & target);
@@ -84,8 +84,8 @@ public:
     [[nodiscard]] auto fd() const noexcept -> int { return sockfd; }
 };
 
-template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::Socket(T const & api, AddrInfoList<U>& spec) : api(api)
+template <NetworkProvider T>
+Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
 {
     AddrInfo const * it = spec.cur();
     for (; it != nullptr; it = spec.advance()) {
@@ -95,30 +95,30 @@ Socket<T, U>::Socket(T const & api, AddrInfoList<U>& spec) : api(api)
     throw api.err_no();
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::~Socket()
+template <NetworkProvider T>
+Socket<T>::~Socket()
 {
     if (NULL_FD == sockfd) { return; }
     api.close(sockfd); /* TODO: stderr if this fails */
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-Socket<T, U>::Socket(Socket&& other) noexcept
+template <NetworkProvider T>
+Socket<T>::Socket(Socket&& other) noexcept
         : api(other.api), sockfd(other.sockfd)
 {
     other.sockfd = NULL_FD;
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-auto Socket<T, U>::operator=(Socket&& other) noexcept -> Socket<T, U>&
+template <NetworkProvider T>
+auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 {
     assert(&api == &other.api);
     std::swap(sockfd, other.sockfd);
     return *this;
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::bind(AddrInfoList<U>& target)
+template <NetworkProvider T>
+void Socket<T>::bind(AddrInfoList<T>& target)
 {
     AddrInfo const * it = target.cur();
     for (; it != nullptr; it = target.advance()) {
@@ -129,8 +129,8 @@ void Socket<T, U>::bind(AddrInfoList<U>& target)
     throw api.err_no();
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::connect(AddrInfoList<U>& target)
+template <NetworkProvider T>
+void Socket<T>::connect(AddrInfoList<T>& target)
 {
     AddrInfo const * it = target.cur();
     for (; it != nullptr; it = target.advance()) {
@@ -141,32 +141,32 @@ void Socket<T, U>::connect(AddrInfoList<U>& target)
     throw api.err_no();
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::bind(AddrInfo const & target)
+template <NetworkProvider T>
+void Socket<T>::bind(AddrInfo const & target)
 {
     if (T::ERROR == api.bind(sockfd, target.ai_addr, target.ai_addrlen)) {
         throw api.err_no();
     }
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::connect(AddrInfo const & target)
+template <NetworkProvider T>
+void Socket<T>::connect(AddrInfo const & target)
 {
     if (T::ERROR == api.connect(sockfd, target.ai_addr, target.ai_addrlen)) {
         throw api.err_no();
     }
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-void Socket<T, U>::listen(int backlog)
+template <NetworkProvider T>
+void Socket<T>::listen(int backlog)
 {
     if (T::ERROR == api.listen(sockfd, backlog)) {
         throw api.err_no();
     }
 }
 
-template <SocketProvider T, AddrInfoProvider U>
-auto Socket<T, U>::accept(SockInfo<T>& sockinfo) -> Socket<T, U>
+template <NetworkProvider T>
+auto Socket<T>::accept(SockInfo<T>& sockinfo) -> Socket<T>
 {
     int const fd = api.accept(sockfd, &(sockinfo.addr), &(sockinfo.addrlen));
     if (NULL_FD == fd) { throw api.err_no(); }

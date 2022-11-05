@@ -20,9 +20,9 @@ target_link_options(alewa_linker_flags
 
 add_executable(alewa
     alewa.cpp
-    alewa/net/netapi.cpp
-    alewa/net/sysnetapi.cpp
     alewa/net/network.cpp
+        alewa/net/net_provider.cpp
+        alewa/net/sysnet_provider.cpp
 )
 
 target_link_libraries(alewa
@@ -38,7 +38,7 @@ target_include_directories(alewa
 
 add_executable(alewa_test
     alewa/test/test.cpp
-    alewa/net/mocknetapi.cpp
+        alewa/net/mocknet_provider.cpp
 )
 
 target_link_libraries(alewa_test

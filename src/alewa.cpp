@@ -1,18 +1,18 @@
 #include "net/network.hpp"
-#include "net/sysnetapi.hpp"
+#include "net/sysnet_provider.hpp"
 
 int main(/*int argc, char* argv[]*/)
 {
     using namespace alewa::net;
 
-    SysNetApi::AddrInfo hints{};
+    SystemNetworkProvider::AddrInfo hints{};
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
 
-    SysNetApi api;
-    AddrInfoList<SysNetApi> spec{api, nullptr, "3490", &hints};
-    Socket<SysNetApi> socket{api, spec};
+    SystemNetworkProvider api;
+    AddrInfoList<SystemNetworkProvider> spec{api, nullptr, "3490", &hints};
+    Socket<SystemNetworkProvider> socket{api, spec};
     socket.bind(*spec.cur());
 
     return 0;

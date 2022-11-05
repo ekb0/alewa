@@ -6,10 +6,13 @@
 namespace alewa::net {
 
 template <typename T>
-concept ProviderBase = requires(T t)
+concept NetworkProvider = requires(T t)
 {
     /* types */
     typename T::AddrInfo;
+    typename T::AIDeleter;
+    typename T::SockAddr;
+    typename T::SockLen_t;
 
     /* constants */
     { T::ERROR } -> std::same_as<int const &>;
@@ -18,17 +21,7 @@ concept ProviderBase = requires(T t)
     /* methods */
     { t.error(int{}) } -> std::same_as<std::string>;
     { t.err_no() } -> std::same_as<int>;
-};
 
-template <typename T>
-concept AddrInfoProvider= requires(T const t)
-{
-    requires ProviderBase<T>;
-
-    /* types */
-    typename T::AIDeleter;
-
-    /* methods */
     requires requires(char const * p_node, char const * p_service,
                       typename T::AddrInfo const * p_hints,
                       typename T::AddrInfo** p_ai_list,
@@ -40,18 +33,7 @@ concept AddrInfoProvider= requires(T const t)
     };
 
     { t.gai_error(int{}) } -> std::same_as<char const *>;
-};
 
-template <typename T>
-concept SocketProvider = requires(T const t)
-{
-    requires ProviderBase<T>;
-
-    /* types */
-    typename T::SockAddr;
-    typename T::SockLen_t;
-
-    /* methods */
     { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
     { t.close(int{}) } -> std::same_as<int>;
     { t.listen(int{}, int{}) } -> std::same_as<int>;
