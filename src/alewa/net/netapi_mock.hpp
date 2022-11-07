@@ -23,10 +23,10 @@ struct addrinfo
     addrinfo *ai_next = nullptr;
 };
 
-struct MockNetworkProvider
+struct MockNetworkApi
 {
     using AddrInfo = addrinfo;
-    using AIDeleter [[maybe_unused]] = void(*)(AddrInfo*);
+    using AiDeleter = void(*)(AddrInfo*);
     using SockAddr = sockaddr;
     using SockLen_t = unsigned short;
 
@@ -89,11 +89,11 @@ struct MockNetworkProvider
     }
 };
 
-inline int const MockNetworkProvider::ERROR = -1;
-inline int const MockNetworkProvider::SUCCESS = 0;
-inline int const MockNetworkProvider::ERRORNO = -5;
+inline int const MockNetworkApi::ERROR = -1;
+inline int const MockNetworkApi::SUCCESS = 0;
+inline int const MockNetworkApi::ERRORNO = -5;
 
-inline bool* MockNetworkProvider::p_is_freed = nullptr;
-inline bool* MockNetworkProvider::p_is_closed = nullptr;
+inline bool* MockNetworkApi::p_is_freed = nullptr;
+inline bool* MockNetworkApi::p_is_closed = nullptr;
 
 } // namespace alewa::net::test

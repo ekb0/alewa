@@ -3,17 +3,17 @@
 #include <memory>
 #include <cassert>
 
-#include "net_provider.hpp"
+#include "netapi.hpp"
 
 namespace alewa::net {
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 class AddrInfoList
 {
 private:
     using AddrInfo = typename T::AddrInfo;
 
-    std::unique_ptr<AddrInfo, typename T::AIDeleter> head;
+    std::unique_ptr<AddrInfo, typename T::AiDeleter> head;
     AddrInfo const * iter;
 
 public:
@@ -40,17 +40,17 @@ public:
         return iter;
     }
 
-    [[maybe_unused]] void reset() noexcept { iter = head.get(); }
+    void reset() noexcept { iter = head.get(); }
 };
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 struct SockInfo
 {
     typename T::SockAddr addr;
     typename T::SockLen_t addrlen;
 };
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 class Socket
 {
 private:
@@ -84,7 +84,7 @@ public:
     [[nodiscard]] auto fd() const noexcept -> int { return sockfd; }
 };
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
 {
     AddrInfo const * it = spec.cur();
@@ -95,21 +95,21 @@ Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
     throw api.err_no();
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 Socket<T>::~Socket()
 {
     if (NULL_FD == sockfd) { return; }
     api.close(sockfd); /* TODO: stderr if this fails */
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 Socket<T>::Socket(Socket&& other) noexcept
         : api(other.api), sockfd(other.sockfd)
 {
     other.sockfd = NULL_FD;
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 {
     assert(&api == &other.api);
@@ -117,7 +117,7 @@ auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
     return *this;
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 void Socket<T>::bind(AddrInfoList<T>& target)
 {
     AddrInfo const * it = target.cur();
@@ -129,7 +129,7 @@ void Socket<T>::bind(AddrInfoList<T>& target)
     throw api.err_no();
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 void Socket<T>::connect(AddrInfoList<T>& target)
 {
     AddrInfo const * it = target.cur();
@@ -141,7 +141,7 @@ void Socket<T>::connect(AddrInfoList<T>& target)
     throw api.err_no();
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 void Socket<T>::bind(AddrInfo const & target)
 {
     if (T::ERROR == api.bind(sockfd, target.ai_addr, target.ai_addrlen)) {
@@ -149,7 +149,7 @@ void Socket<T>::bind(AddrInfo const & target)
     }
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 void Socket<T>::connect(AddrInfo const & target)
 {
     if (T::ERROR == api.connect(sockfd, target.ai_addr, target.ai_addrlen)) {
@@ -157,7 +157,7 @@ void Socket<T>::connect(AddrInfo const & target)
     }
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 void Socket<T>::listen(int backlog)
 {
     if (T::ERROR == api.listen(sockfd, backlog)) {
@@ -165,7 +165,7 @@ void Socket<T>::listen(int backlog)
     }
 }
 
-template <NetworkProvider T>
+template <PosixNetworkApi T>
 auto Socket<T>::accept(SockInfo<T>& sockinfo) -> Socket<T>
 {
     int const fd = api.accept(sockfd, &(sockinfo.addr), &(sockinfo.addrlen));

@@ -2,18 +2,18 @@
 
 #include <string>
 
-#include "net/network.hpp"
+#include "net/socket.hpp"
 
 namespace alewa {
 
 namespace detail {
 
-template <net::NetworkProvider T>
+template <net::PosixNetworkApi T>
 auto hints() -> typename T::AddrInfo;
 
 }  // namespace alewa::detail
 
-template <net::NetworkProvider T>
+template <net::PosixNetworkApi T>
 class Server
 {
 private:
@@ -26,7 +26,7 @@ public:
     void stop() {}
 };
 
-template <net::NetworkProvider T>
+template <net::PosixNetworkApi T>
 void Server<T>::start(std::string const & port, int backlog)
 {
     typename T::AddrInfo hints = detail::hints<T>();
@@ -43,7 +43,7 @@ void Server<T>::start(std::string const & port, int backlog)
 namespace detail {
 #include <netdb.h>
 
-template <net::NetworkProvider T>
+template <net::PosixNetworkApi T>
 auto hints() -> typename T::AddrInfo
 {
     typename T::AddrInfo hints{};

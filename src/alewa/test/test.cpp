@@ -1,7 +1,7 @@
 #include <algorithm>
 
 #include "test.hpp"
-#include "net/network.test.cpp"
+#include "net/socket.test.cpp"
 
 using namespace alewa::test;
 

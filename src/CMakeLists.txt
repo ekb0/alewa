@@ -9,7 +9,7 @@ target_compile_options(alewa_compiler_flags
         -Wextra
         -Wconversion
         -pedantic-errors
-        -fsanitize=address
+        # -fsanitize=address
         -D_GLIBCXX_ASSERTIONS
     )
 
@@ -21,15 +21,15 @@ target_link_options(alewa_linker_flags
 add_executable(alewa
     alewa.cpp
     alewa/server.cpp
-    alewa/net/network.cpp
-    alewa/net/net_provider.cpp
-    alewa/net/sysnet_provider.cpp
+    alewa/net/socket.cpp
+    alewa/net/netapi.cpp
+    alewa/net/netapi_system.cpp
 )
 
 target_link_libraries(alewa
     PRIVATE
         alewa_compiler_flags
-        alewa_linker_flags
+        # alewa_linker_flags
 )
 
 target_include_directories(alewa
@@ -39,13 +39,13 @@ target_include_directories(alewa
 
 add_executable(alewa_test
     alewa/test/test.cpp
-    alewa/net/mocknet_provider.cpp
+    alewa/net/netapi_mock.cpp
 )
 
 target_link_libraries(alewa_test
     PRIVATE
         alewa_compiler_flags
-        alewa_linker_flags
+        # alewa_linker_flags
 )
 
 target_include_directories(alewa_test

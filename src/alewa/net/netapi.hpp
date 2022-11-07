@@ -6,11 +6,11 @@
 namespace alewa::net {
 
 template <typename T>
-concept NetworkProvider = requires(T t)
+concept PosixNetworkApi = requires(T t)
 {
     /* types */
     typename T::AddrInfo;
-    typename T::AIDeleter;
+    typename T::AiDeleter;
     typename T::SockAddr;
     typename T::SockLen_t;
 

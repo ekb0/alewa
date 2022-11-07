@@ -1,4 +1,4 @@
-#include "net/sysnet_provider.hpp"
+#include "net/netapi_system.hpp"
 
 #include "server.hpp"
 
@@ -7,7 +7,7 @@ int main(/*int argc, char* argv[]*/)
     using namespace alewa;
     using namespace alewa::net;
 
-    SystemNetworkProvider api;
+    SystemNetworkApi api;
     Server server{api};
 
     server.start("8080", 10);

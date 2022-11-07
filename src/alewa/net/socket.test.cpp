@@ -1,18 +1,18 @@
 #include "test/test.hpp"
 
-#include "network.hpp"
-#include "mocknet_provider.hpp"
+#include "socket.hpp"
+#include "netapi_mock.hpp"
 
 namespace alewa::net::test {
 
 TEST(addrinfolist_construction)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList happy{api, nullptr, nullptr, nullptr};
     EXPECT_EQ(happy.cur(), &api.ai);
 
     try {
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         AddrInfoList sad{api, nullptr, nullptr, nullptr};
     }
     catch (int e) {
@@ -24,27 +24,27 @@ TEST(addrinfolist_construction)
 
 TEST(addrinfolist_resource_cleanup)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     bool is_freed = false;
-    MockNetworkProvider::set_is_freed(&is_freed);
+    MockNetworkApi::set_is_freed(&is_freed);
     {
         AddrInfoList spec{api, nullptr, nullptr, nullptr};
         EXPECT_EQ(is_freed, false);
     }
-    MockNetworkProvider::set_is_freed(nullptr);
+    MockNetworkApi::set_is_freed(nullptr);
     EXPECT_EQ(is_freed, true);
 }
 
 TEST(socket_construction)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
     EXPECT_EQ(happy.fd(), api.ret_code);
 
     try {
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         Socket sad{api, spec};
     }
     catch (int e) {
@@ -56,28 +56,28 @@ TEST(socket_construction)
 
 TEST(socket_resource_cleanup)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     bool is_closed = false;
-    MockNetworkProvider::set_is_closed(&is_closed);
+    MockNetworkApi::set_is_closed(&is_closed);
     {
         Socket socket{api, spec};
         EXPECT_EQ(is_closed, false);
     }
     EXPECT_EQ(is_closed, true);
-    MockNetworkProvider::set_is_closed(nullptr);
+    MockNetworkApi::set_is_closed(nullptr);
 }
 
 TEST(socket_move)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
     Socket socket1{api, spec};
     Socket socket2{api, spec};
 
     bool is_closed = false;
-    MockNetworkProvider::set_is_closed(&is_closed);
+    MockNetworkApi::set_is_closed(&is_closed);
 
     Socket newSocket = std::move(socket1);
     socket1.~Socket();  // NULL_FD
@@ -88,19 +88,19 @@ TEST(socket_move)
     EXPECT_EQ(is_closed, true);
     is_closed = false;
 
-    MockNetworkProvider::set_is_closed(nullptr);
+    MockNetworkApi::set_is_closed(nullptr);
 }
 
 TEST(socket_bind_addrinfolist)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
     happy.bind(spec);
     try {
         Socket sad{api, spec};
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         sad.bind(spec);
     }
     catch (int e) {
@@ -112,14 +112,14 @@ TEST(socket_bind_addrinfolist)
 
 TEST(socket_bind)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
     happy.bind(*spec.cur());
     try {
         Socket sad{api, spec};
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         sad.bind(*spec.cur());
     }
     catch (int e) {
@@ -131,14 +131,14 @@ TEST(socket_bind)
 
 TEST(socket_connect_addrinfolist)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
     happy.connect(spec);
     try {
         Socket sad{api, spec};
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         sad.connect(spec);
     }
     catch (int e) {
@@ -150,14 +150,14 @@ TEST(socket_connect_addrinfolist)
 
 TEST(socket_connect)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
     happy.connect(*spec.cur());
     try {
         Socket sad{api, spec};
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         sad.connect(*spec.cur());
     }
     catch (int e) {
@@ -169,14 +169,14 @@ TEST(socket_connect)
 
 TEST(socket_listen)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
     happy.listen(0);
     try {
         Socket sad{api, spec};
-        api.ret_code = MockNetworkProvider::ERROR;
+        api.ret_code = MockNetworkApi::ERROR;
         sad.listen(0);
     }
     catch (int e) {
@@ -188,22 +188,22 @@ TEST(socket_listen)
 
 TEST(socket_accept)
 {
-    MockNetworkProvider api;
+    MockNetworkApi api;
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
     Socket sock{api, spec};
 
     sockaddr addr = {0xB00, {0,69,2}};
     api.ai.ai_addr = &addr;
 
-    SockInfo<MockNetworkProvider> happy_info{};
+    SockInfo<MockNetworkApi> happy_info{};
     Socket happy = sock.accept(happy_info);
 
     EXPECT_EQ(happy_info.addr.sa_family, addr.sa_family);
     EXPECT_EQ(happy_info.addr.sa_data[1], addr.sa_data[1]);
 
     try {
-        SockInfo<MockNetworkProvider> sad_info{};
-        api.ret_code = MockNetworkProvider::ERROR;
+        SockInfo<MockNetworkApi> sad_info{};
+        api.ret_code = MockNetworkApi::ERROR;
         sock.accept(sad_info);
     }
     catch(int e) {
