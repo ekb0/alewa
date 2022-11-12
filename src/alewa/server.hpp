@@ -33,7 +33,7 @@ void Server<T>::start(std::string const & port, int backlog)
     net::AddrInfoList<T> spec{api, nullptr, port.c_str(), &hints};
     net::Socket<T> socket{api, spec};
 
-    socket.bind(*spec.cur());
+    socket.bind(*spec.current());
     socket.listen(backlog);
 
     net::SockInfo<T> info;

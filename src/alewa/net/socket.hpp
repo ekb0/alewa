@@ -23,15 +23,12 @@ public:
     {
         AddrInfo* l = nullptr;
         int ret = api.getaddrinfo(p_node, p_service, p_hints, &l);
-        if (T::SUCCESS != ret) { throw ret; }
+        if (ret != T::SUCCESS) { throw ret; }
         head.reset(l);
         iter = l;
     }
 
-    auto cur() const noexcept -> AddrInfo const *
-    {
-        return iter;
-    }
+    auto current() const noexcept -> AddrInfo const * { return iter; }
 
     auto advance() noexcept -> AddrInfo const *
     {
@@ -40,6 +37,7 @@ public:
         return iter;
     }
 
+    [[maybe_unused]]
     void reset() noexcept { iter = head.get(); }
 };
 
@@ -87,10 +85,10 @@ public:
 template <PosixNetworkApi T>
 Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
 {
-    AddrInfo const * it = spec.cur();
+    AddrInfo const * it = spec.current();
     for (; it != nullptr; it = spec.advance()) {
         sockfd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-        if (NULL_FD != sockfd) { return; }
+        if (sockfd != NULL_FD) { return; }
     }
     throw api.err_no();
 }
@@ -98,7 +96,7 @@ Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
 template <PosixNetworkApi T>
 Socket<T>::~Socket()
 {
-    if (NULL_FD == sockfd) { return; }
+    if (sockfd == NULL_FD) { return; }
     api.close(sockfd); /* TODO: stderr if this fails */
 }
 
@@ -120,11 +118,10 @@ auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 template <PosixNetworkApi T>
 void Socket<T>::bind(AddrInfoList<T>& target)
 {
-    AddrInfo const * it = target.cur();
+    AddrInfo const * it = target.current();
     for (; it != nullptr; it = target.advance()) {
-        if (T::SUCCESS == api.bind(sockfd, it->ai_addr, it->ai_addrlen)) {
-            return;
-        }
+        int ret = api.bind(sockfd, it->ai_addr, it->ai_addrlen);
+        if (ret == T::SUCCESS) { return; }
     }
     throw api.err_no();
 }
@@ -132,11 +129,10 @@ void Socket<T>::bind(AddrInfoList<T>& target)
 template <PosixNetworkApi T>
 void Socket<T>::connect(AddrInfoList<T>& target)
 {
-    AddrInfo const * it = target.cur();
+    AddrInfo const * it = target.current();
     for (; it != nullptr; it = target.advance()) {
-        if (T::SUCCESS == api.connect(sockfd, it->ai_addr, it->ai_addrlen)) {
-            return;
-        }
+        int ret = api.connect(sockfd, it->ai_addr, it->ai_addrlen);
+        if (ret == T::SUCCESS) { return; }
     }
     throw api.err_no();
 }
@@ -144,32 +140,29 @@ void Socket<T>::connect(AddrInfoList<T>& target)
 template <PosixNetworkApi T>
 void Socket<T>::bind(AddrInfo const & target)
 {
-    if (T::ERROR == api.bind(sockfd, target.ai_addr, target.ai_addrlen)) {
-        throw api.err_no();
-    }
+    int ret = api.bind(sockfd, target.ai_addr, target.ai_addrlen);
+    if (ret == T::ERROR) { throw api.err_no(); }
 }
 
 template <PosixNetworkApi T>
 void Socket<T>::connect(AddrInfo const & target)
 {
-    if (T::ERROR == api.connect(sockfd, target.ai_addr, target.ai_addrlen)) {
-        throw api.err_no();
-    }
+    int ret = api.connect(sockfd, target.ai_addr, target.ai_addrlen);
+    if (ret == T::ERROR) { throw api.err_no(); }
 }
 
 template <PosixNetworkApi T>
 void Socket<T>::listen(int backlog)
 {
-    if (T::ERROR == api.listen(sockfd, backlog)) {
-        throw api.err_no();
-    }
+    int ret = api.listen(sockfd, backlog);
+    if (ret == T::ERROR) { throw api.err_no(); }
 }
 
 template <PosixNetworkApi T>
 auto Socket<T>::accept(SockInfo<T>& sockinfo) -> Socket<T>
 {
     int const fd = api.accept(sockfd, &(sockinfo.addr), &(sockinfo.addrlen));
-    if (NULL_FD == fd) { throw api.err_no(); }
+    if (fd == NULL_FD) { throw api.err_no(); }
     return Socket{api, fd};
 }
 

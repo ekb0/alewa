@@ -9,7 +9,7 @@ TEST(addrinfolist_construction)
 {
     MockNetworkApi api;
     AddrInfoList happy{api, nullptr, nullptr, nullptr};
-    EXPECT_EQ(happy.cur(), &api.ai);
+    EXPECT_EQ(happy.current(), &api.ai);
 
     try {
         api.ret_code = MockNetworkApi::ERROR;
@@ -116,11 +116,11 @@ TEST(socket_bind)
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
-    happy.bind(*spec.cur());
+    happy.bind(*spec.current());
     try {
         Socket sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
-        sad.bind(*spec.cur());
+        sad.bind(*spec.current());
     }
     catch (int e) {
         EXPECT_EQ(e, api.errorno);
@@ -154,11 +154,11 @@ TEST(socket_connect)
     AddrInfoList spec{api, nullptr, nullptr, nullptr};
 
     Socket happy{api, spec};
-    happy.connect(*spec.cur());
+    happy.connect(*spec.current());
     try {
         Socket sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
-        sad.connect(*spec.cur());
+        sad.connect(*spec.current());
     }
     catch (int e) {
         EXPECT_EQ(e, api.errorno);
