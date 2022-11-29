@@ -4,6 +4,8 @@
 #include <cstring>
 #include <netdb.h>
 #include <unistd.h>
+#include <fcntl.h>
+
 #include <string>
 
 namespace alewa::net {
@@ -34,6 +36,8 @@ struct SystemNetworkApi
     NETAPI_DELEGATE(listen, ::listen);
     NETAPI_DELEGATE(accept, ::accept);
     NETAPI_DELEGATE(setsockopt, ::setsockopt);
+
+    NETAPI_DELEGATE(fcntl, ::fcntl);
 };
 
 }  // namespace alewa::net

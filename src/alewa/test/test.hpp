@@ -34,7 +34,7 @@ std::string tostr(T const & x)
 template <typename T, typename U>
 std::string pretty_err(std::string const & expr, T const & x, U const & y)
 {
-    return "\n" + expr + ":\nExpected: " + tostr(x) + "\nActual: " + tostr(y);
+    return "\n" + expr + ":\nExpected: " + tostr(x) + "\nActual  : " + tostr(y);
 }
 
 }  // namespace alewa::test

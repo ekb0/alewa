@@ -9,45 +9,35 @@ namespace alewa {
 namespace detail {
 
 template <net::PosixNetworkApi T>
-auto hints() -> typename T::AddrInfo;
+auto new_bound_socket(T const & api, std::string const & port)
+        -> net::Socket<T>;
 
 }  // namespace alewa::detail
 
 template <net::PosixNetworkApi T>
 class Server
 {
-private:
-    T const & api;
-
-    auto new_bound_socket(std::string const & port) -> net::Socket<T>;
-
 public:
-    Server(T const & api) : api(api) {}
-
-    void start(std::string const & port, int backlog);
+    void start(T const & api, std::string const & port, int backlog);
 };
 
 template <net::PosixNetworkApi T>
-void Server<T>::start(std::string const & port, int backlog)
+void Server<T>::start(T const & api, std::string const & port, int backlog)
 {
-    net::Socket<T> socket = new_bound_socket(port);
+    net::Socket<T> socket = detail::new_bound_socket(api, port);
     socket.listen(backlog);
     net::SockInfo<T> info;
     net::Socket<T> accepted = socket.accept(info);
 }
 
-template <net::PosixNetworkApi T>
-auto Server<T>::new_bound_socket(std::string const & port) -> net::Socket<T>
-{
-    typename T::AddrInfo hints = detail::hints<T>();
-    net::AddrInfoList<T> spec{api, nullptr, port.c_str(), &hints};
-    net::Socket<T> socket{api, spec};
-    socket.bind(*spec.current());
-    return socket;
-}
-
 namespace detail {
+
+/*
+ * only constants from these headers should be referenced, not singletons
+ * or methods that modify system singletons
+ */
 #include <netdb.h>
+#include <fcntl.h>
 
 template <net::PosixNetworkApi T>
 auto hints() -> typename T::AddrInfo
@@ -58,6 +48,20 @@ auto hints() -> typename T::AddrInfo
     hints.ai_socktype = SOCK_STREAM;
     return hints;
 }
+
+template <net::PosixNetworkApi T>
+auto new_bound_socket(T const & api, std::string const & port)
+        -> net::Socket<T>
+{
+    typename T::AddrInfo hints = detail::hints<T>();
+    net::AddrInfoList<T> spec{api, nullptr, port.c_str(), &hints};
+    net::Socket<T> socket{api, spec};
+    socket.set_option(SOL_SOCKET, SO_REUSEADDR, 1);
+    socket.fcntl(F_SETFL, O_NONBLOCK);
+    socket.bind(*spec.current());
+    return socket;
+}
+
 }  // namespace alewa::detail
 
 }  // namespace alewa

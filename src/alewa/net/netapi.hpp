@@ -27,7 +27,7 @@ concept PosixNetworkApi = requires(T t)
                       typename T::AddrInfo* ai_list)
     {
         { t.getaddrinfo(p_node, p_service, p_hints, p_ai_list) }
-        -> std::same_as<int>;
+                -> std::same_as<int>;
         { t.freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
 
@@ -48,8 +48,10 @@ concept PosixNetworkApi = requires(T t)
         { t.connect(int{}, addr, addrlen) } -> std::same_as<int>;
         { t.accept(int{}, p_addr, p_addrlen) } -> std::same_as<int>;
         { t.setsockopt(int{}, int{}, int{}, p_optval, optlen) }
-        -> std::same_as<int>;
+                -> std::same_as<int>;
     };
+
+    { t.fcntl(int{}, int{}, int{}) } -> std::same_as<int>;
 };
 
 }  // namespace alewa::net

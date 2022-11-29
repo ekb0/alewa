@@ -7,10 +7,13 @@ int main(/*int argc, char* argv[]*/)
     using namespace alewa;
     using namespace alewa::net;
 
-    SystemNetworkApi api;
-    Server<SystemNetworkApi> server{api};
+    std::string const PORT = "8080";
+    int const BACKLOG = 10;
 
-    server.start("8080", 10);
+    SystemNetworkApi api;
+
+    Server<SystemNetworkApi> server;
+    server.start(api, PORT, BACKLOG);
 
     return 0;
 }

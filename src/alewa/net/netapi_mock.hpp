@@ -90,6 +90,8 @@ struct MockNetworkApi
     {
         return ret_code;
     }
+
+    int fcntl(int, int, int) const { return ret_code; }
 };
 
 inline int const MockNetworkApi::ERROR = -1;

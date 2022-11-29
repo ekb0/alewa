@@ -5,6 +5,10 @@
 
 namespace alewa::net::test {
 
+auto err_msg(std::string const & func, std::string const & msg) {
+    return func + " on socket 0: " + msg;
+}
+
 TEST(addrinfolist_construction)
 {
     MockNetworkApi api;
@@ -16,7 +20,8 @@ TEST(addrinfolist_construction)
         AddrInfoList<MockNetworkApi> sad{api, nullptr, nullptr, nullptr};
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(std::string{e.what()}, api.gai_strerror(api.ret_code));
+        std::string m = std::string{"getaddrinfo: "};
+        EXPECT_EQ(std::string{e.what()}, m + api.gai_strerror(api.ret_code));
         return;
     }
     BUG(std::string{"sad construction did not throw"});
@@ -48,7 +53,7 @@ TEST(socket_construction)
         Socket<MockNetworkApi> sad{api, spec};
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), "socket constructor: " + api.error());
         return;
     }
     BUG(std::string{"sad construction did not throw"});
@@ -104,7 +109,7 @@ TEST(socket_bind_addrinfolist)
         sad.bind(spec);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("bind", api.error()));
         return;
     }
     BUG(std::string{"sad bind did not throw"});
@@ -123,7 +128,7 @@ TEST(socket_bind)
         sad.bind(*spec.current());
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("bind", api.error()));
         return;
     }
     BUG(std::string{"sad bind did not throw"});
@@ -142,7 +147,7 @@ TEST(socket_connect_addrinfolist)
         sad.connect(spec);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("connect", api.error()));
         return;
     }
     BUG(std::string{"sad connect did not throw"});
@@ -161,7 +166,7 @@ TEST(socket_connect)
         sad.connect(*spec.current());
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("connect", api.error()));
         return;
     }
     BUG(std::string{"sad connect did not throw"});
@@ -180,7 +185,7 @@ TEST(socket_listen)
         sad.listen(0);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("listen", api.error()));
         return;
     }
     BUG(std::string{"sad listen did not throw"});
@@ -207,7 +212,7 @@ TEST(socket_accept)
         sock.accept(sad_info);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("accept", api.error()));
         return;
     }
     BUG(std::string{"sad accept did not throw"});
@@ -225,7 +230,25 @@ TEST(socket_set_option)
         sad.set_option(1, 2, 3);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), api.error());
+        EXPECT_EQ(e.what(), err_msg("set_option", api.error()));
+        return;
+    }
+    BUG(std::string{"sad set_option did not throw"});
+}
+
+TEST(socket_fcntl)
+{
+    MockNetworkApi api;
+    AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
+    Socket<MockNetworkApi> happy{api, spec};
+    happy.fcntl(1, 2);
+    try {
+        Socket<MockNetworkApi> sad{api, spec};
+        api.ret_code = MockNetworkApi::ERROR;
+        sad.fcntl(1, 2);
+    }
+    catch (std::runtime_error const & e) {
+        EXPECT_EQ(e.what(), err_msg("fcntl", api.error()));
         return;
     }
     BUG(std::string{"sad set_option did not throw"});
