@@ -3,7 +3,7 @@
 namespace alewa::io {
 
 template <typename T>
-concept PollApi = requires(T t)
+concept IoApi = requires(T t)
 {
     /* types */
     typename T::PollFd;

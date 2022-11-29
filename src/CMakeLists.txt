@@ -25,8 +25,8 @@ add_executable(alewa
     alewa/net/socket.cpp
     alewa/net/netapi.cpp
     alewa/net/netapi_system.cpp
-    alewa/io/pollapi.cpp
-    alewa/io/pollapi_system.cpp
+    alewa/io/ioapi.cpp
+    alewa/io/ioapi_system.cpp
 )
 
 target_link_libraries(alewa
