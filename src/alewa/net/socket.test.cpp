@@ -10,57 +10,57 @@ auto err_msg(std::string const & func, std::string const & msg)
     return func + " on socket 0: " + msg;
 }
 
-TEST(addrinfolist_construction)
+ALW_TEST(addrinfolist_construction)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> happy{api, nullptr, nullptr, nullptr};
-    EXPECT_EQ(happy.current(), &api.ai);
+    ALW_EXPECT_EQ(happy.current(), &api.ai);
 
+    std::string error{};
     try {
         api.ret_code = MockNetworkApi::ERROR;
         AddrInfoList<MockNetworkApi> sad{api, nullptr, nullptr, nullptr};
     }
     catch (std::runtime_error const & e) {
-        std::string m = std::string{"getaddrinfo: "};
-        EXPECT_EQ(std::string{e.what()}, m + api.gai_strerror(api.ret_code));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad construction did not throw"});
+    std::string m = std::string{"getaddrinfo: "};
+    ALW_EXPECT_EQ(error, m + api.gai_strerror(api.ret_code));
 }
 
-TEST(addrinfolist_resource_cleanup)
+ALW_TEST(addrinfolist_resource_cleanup)
 {
     MockNetworkApi api;
     bool is_freed = false;
     MockNetworkApi::set_is_freed(&is_freed);
     {
         AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
-        EXPECT_EQ(is_freed, false);
+        ALW_EXPECT_EQ(is_freed, false);
     }
     MockNetworkApi::set_is_freed(nullptr);
-    EXPECT_EQ(is_freed, true);
+    ALW_EXPECT_EQ(is_freed, true);
 }
 
-TEST(socket_construction)
+ALW_TEST(socket_construction)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
 
     Socket<MockNetworkApi> happy{api, spec};
-    EXPECT_EQ(happy.fd(), api.ret_code);
+    ALW_EXPECT_EQ(happy.fd(), api.ret_code);
 
+    std::string error{};
     try {
         api.ret_code = MockNetworkApi::ERROR;
         Socket<MockNetworkApi> sad{api, spec};
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), "socket constructor: " + api.error());
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad construction did not throw"});
+    ALW_EXPECT_EQ(error, "socket constructor: " + api.error());
 }
 
-TEST(socket_resource_cleanup)
+ALW_TEST(socket_resource_cleanup)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
@@ -69,13 +69,13 @@ TEST(socket_resource_cleanup)
     MockNetworkApi::set_is_closed(&is_closed);
     {
         Socket<MockNetworkApi> socket{api, spec};
-        EXPECT_EQ(is_closed, false);
+        ALW_EXPECT_EQ(is_closed, false);
     }
-    EXPECT_EQ(is_closed, true);
+    ALW_EXPECT_EQ(is_closed, true);
     MockNetworkApi::set_is_closed(nullptr);
 }
 
-TEST(socket_move)
+ALW_TEST(socket_move)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
@@ -87,74 +87,77 @@ TEST(socket_move)
 
     Socket<MockNetworkApi> newSocket = std::move(socket1);
     socket1.~Socket<MockNetworkApi>();  // NULL_FD
-    EXPECT_EQ(is_closed, false);
+    ALW_EXPECT_EQ(is_closed, false);
 
     newSocket = std::move(socket2);
     socket2.~Socket<MockNetworkApi>();  // Has socket1's fd
-    EXPECT_EQ(is_closed, true);
+    ALW_EXPECT_EQ(is_closed, true);
     is_closed = false;
 
     MockNetworkApi::set_is_closed(nullptr);
 }
 
-TEST(socket_bind)
+ALW_TEST(socket_bind)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
 
     Socket<MockNetworkApi> happy{api, spec};
     happy.bind(*spec.current());
+
+    std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
         sad.bind(*spec.current());
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("bind", api.error()));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad bind did not throw"});
+    ALW_EXPECT_EQ(error, err_msg("bind", api.error()));
 }
 
-TEST(socket_connect)
+ALW_TEST(socket_connect)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
 
     Socket<MockNetworkApi> happy{api, spec};
     happy.connect(*spec.current());
+
+    std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
         sad.connect(*spec.current());
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("connect", api.error()));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad connect did not throw"});
+    ALW_EXPECT_EQ(error, err_msg("connect", api.error()));
 }
 
-TEST(socket_listen)
+ALW_TEST(socket_listen)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
 
     Socket<MockNetworkApi> happy{api, spec};
     happy.listen(0);
+
+    std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
         sad.listen(0);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("listen", api.error()));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad listen did not throw"});
+    ALW_EXPECT_EQ(error, err_msg("listen", api.error()));
 }
 
-TEST(socket_accept)
+ALW_TEST(socket_accept)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
@@ -166,55 +169,57 @@ TEST(socket_accept)
     SockInfo<MockNetworkApi> happy_info{};
     Socket<MockNetworkApi> happy = sock.accept(happy_info);
 
-    EXPECT_EQ(happy_info.addr.sa_family, addr.sa_family);
-    EXPECT_EQ(happy_info.addr.sa_data[1], addr.sa_data[1]);
+    ALW_EXPECT_EQ(happy_info.addr.sa_family, addr.sa_family);
+    ALW_EXPECT_EQ(happy_info.addr.sa_data[1], addr.sa_data[1]);
 
+    std::string error{};
     try {
         SockInfo<MockNetworkApi> sad_info{};
         api.ret_code = MockNetworkApi::ERROR;
         sock.accept(sad_info);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("accept", api.error()));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad accept did not throw"});
+    ALW_EXPECT_EQ(error, err_msg("accept", api.error()));
 }
 
-TEST(socket_set_option)
+ALW_TEST(socket_set_option)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
     Socket<MockNetworkApi> happy{api, spec};
     happy.set_option(1, 2, 3);
+
+    std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
         sad.set_option(1, 2, 3);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("set_option", api.error()));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad set_option did not throw"});
+    ALW_EXPECT_EQ(error, err_msg("set_option", api.error()));
 }
 
-TEST(socket_fcntl)
+ALW_TEST(socket_fcntl)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
     Socket<MockNetworkApi> happy{api, spec};
     happy.fcntl(1, 2);
+
+    std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
         sad.fcntl(1, 2);
     }
     catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("fcntl", api.error()));
-        return;
+        error = e.what();
     }
-    BUG(std::string{"sad set_option did not throw"});
+    ALW_EXPECT_EQ(error, err_msg("fcntl", api.error()));
 }
 
 }  // namespace alewa::net::test

@@ -32,14 +32,14 @@ std::string tostr(T const & x)
 }
 
 template <typename T, typename U>
-std::string pretty_err(std::string const & expr, T const & x, U const & y)
+std::string pretty_err(std::string const & expr, T const & a, U const & x)
 {
-    return "\n" + expr + ":\nExpected: " + tostr(x) + "\nActual  : " + tostr(y);
+    return "\n" + expr + ":\nActual  : " + tostr(a) + "\nExpected: " + tostr(x);
 }
 
 }  // namespace alewa::test
 
-#define TEST(tname)                                                            \
+#define ALW_TEST(tname)                                                        \
     void (_test_##tname)(std::string&);                                        \
                                                                                \
     struct _add_test_##tname                                                   \
@@ -54,22 +54,10 @@ std::string pretty_err(std::string const & expr, T const & x, U const & y)
                                                                                \
     void (_test_##tname)(std::string& fail_expr [[maybe_unused]])
 
-#define EXPECT_EQ(x, y)                                                        \
-    if (x != y) {                                                              \
-        std::string expr = #x + std::string{" == "} + #y;                      \
-        fail_expr = alewa::test::pretty_err(expr, x, y);                       \
+#define ALW_EXPECT_EQ(a, x)                                                    \
+    if (a != x) {                                                              \
+        std::string expr = #a + std::string{" == "} + #x;                      \
+        fail_expr = alewa::test::pretty_err(expr, a, x);                       \
         return;                                                                \
     }                                                                          \
     static_assert(true, "") /* require a semicolon after using macro */
-
-#define EXPECT_NEQ(x, y)                                                       \
-    if (x == y) {                                                              \
-        std::string expr = #x + std::string{" != "} + #y;                      \
-        fail_expr = alewa::test::pretty_err(expr, x, y);                       \
-        return;                                                                \
-    }                                                                          \
-    static_assert(true, "") /* require a semicolon after using macro */
-
-#define BUG(msg)                                                               \
-    fail_expr = msg;                                                           \
-    return
