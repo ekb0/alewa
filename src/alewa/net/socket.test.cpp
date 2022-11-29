@@ -213,4 +213,22 @@ TEST(socket_accept)
     BUG(std::string{"sad accept did not throw"});
 }
 
+TEST(socket_set_option)
+{
+    MockNetworkApi api;
+    AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
+    Socket<MockNetworkApi> happy{api, spec};
+    happy.set_option(1, 2, 3);
+    try {
+        Socket<MockNetworkApi> sad{api, spec};
+        api.ret_code = MockNetworkApi::ERROR;
+        sad.set_option(1, 2, 3);
+    }
+    catch (std::runtime_error const & e) {
+        EXPECT_EQ(e.what(), api.error());
+        return;
+    }
+    BUG(std::string{"sad set_option did not throw"});
+}
+
 }  // namespace alewa::net::test

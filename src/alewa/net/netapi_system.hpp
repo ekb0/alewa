@@ -33,6 +33,7 @@ struct SystemNetworkApi
     NETAPI_DELEGATE(connect, ::connect);
     NETAPI_DELEGATE(listen, ::listen);
     NETAPI_DELEGATE(accept, ::accept);
+    NETAPI_DELEGATE(setsockopt, ::setsockopt);
 };
 
 }  // namespace alewa::net

@@ -85,6 +85,11 @@ struct MockNetworkApi
         *p_addrlen = sizeof(SockLen_t);
         return ret_code;
     }
+
+    int setsockopt(int, int, int, void const *, SockLen_t) const
+    {
+        return ret_code;
+    }
 };
 
 inline int const MockNetworkApi::ERROR = -1;

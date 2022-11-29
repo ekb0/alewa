@@ -79,7 +79,9 @@ public:
     void connect(AddrInfo const & target);
 
     void listen(int backlog);
-    auto accept(SockInfo<T>& sockinfo) -> Socket;
+    auto accept(SockInfo<T>& client_info) -> Socket;
+
+    void set_option(int level, int optname, int optval);
 
     [[nodiscard]] auto fd() const noexcept -> int { return sockfd; }
 };
@@ -165,13 +167,22 @@ void Socket<T>::listen(int backlog)
 }
 
 template <PosixNetworkApi T>
-auto Socket<T>::accept(SockInfo<T>& sockinfo) -> Socket<T>
+auto Socket<T>::accept(SockInfo<T>& client_info) -> Socket<T>
 {
-    int const fd = api.accept(sockfd, &(sockinfo.addr), &(sockinfo.addrlen));
+    int const fd = api.accept(sockfd, &client_info.addr, &client_info.addrlen);
     if (fd == NULL_FD) {
         throw std::runtime_error{ api.error() };
     }
     return Socket{api, fd};
+}
+
+template <PosixNetworkApi T>
+void Socket<T>::set_option(int level, int optname, int const optval)
+{
+    if (T::ERROR == api.setsockopt(sockfd, level, optname,
+                                   &optval, sizeof(optval))) {
+        throw std::runtime_error{ api.error() };
+    }
 }
 
 }  // namespace alewa::net

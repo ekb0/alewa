@@ -8,7 +8,7 @@ int main(/*int argc, char* argv[]*/)
     using namespace alewa::net;
 
     SystemNetworkApi api;
-    Server server{api};
+    Server<SystemNetworkApi> server{api};
 
     server.start("8080", 10);
 

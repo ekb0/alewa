@@ -19,25 +19,31 @@ class Server
 private:
     T const & api;
 
+    auto new_bound_socket(std::string const & port) -> net::Socket<T>;
+
 public:
     Server(T const & api) : api(api) {}
 
     void start(std::string const & port, int backlog);
-    void stop() {}
 };
 
 template <net::PosixNetworkApi T>
 void Server<T>::start(std::string const & port, int backlog)
 {
+    net::Socket<T> socket = new_bound_socket(port);
+    socket.listen(backlog);
+    net::SockInfo<T> info;
+    net::Socket<T> accepted = socket.accept(info);
+}
+
+template <net::PosixNetworkApi T>
+auto Server<T>::new_bound_socket(std::string const & port) -> net::Socket<T>
+{
     typename T::AddrInfo hints = detail::hints<T>();
     net::AddrInfoList<T> spec{api, nullptr, port.c_str(), &hints};
     net::Socket<T> socket{api, spec};
-
     socket.bind(*spec.current());
-    socket.listen(backlog);
-
-    net::SockInfo<T> info;
-    net::Socket<T> accepted = socket.accept(info);
+    return socket;
 }
 
 namespace detail {

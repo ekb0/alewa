@@ -40,11 +40,15 @@ concept PosixNetworkApi = requires(T t)
     requires requires(typename T::SockAddr const * addr,
                       typename T::SockAddr* p_addr,
                       typename T::SockLen_t addrlen,
-                      typename T::SockLen_t* p_addrlen)
+                      typename T::SockLen_t* p_addrlen,
+                      typename T::SockLen_t optlen,
+                      void const * p_optval)
     {
         { t.bind(int{}, addr, addrlen) } -> std::same_as<int>;
         { t.connect(int{}, addr, addrlen) } -> std::same_as<int>;
         { t.accept(int{}, p_addr, p_addrlen) } -> std::same_as<int>;
+        { t.setsockopt(int{}, int{}, int{}, p_optval, optlen) }
+        -> std::same_as<int>;
     };
 };
 
