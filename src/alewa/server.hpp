@@ -9,8 +9,7 @@ namespace alewa {
 namespace detail {
 
 template <net::PosixNetworkApi T>
-auto new_bound_socket(T const & api, std::string const & port)
-        -> net::Socket<T>;
+net::Socket<T> new_bound_socket(T const & api, std::string const & port);
 
 }  // namespace alewa::detail
 
@@ -33,32 +32,28 @@ void Server<T>::start(T const & api, std::string const & port, int backlog)
 namespace detail {
 
 /*
- * only constants from these headers should be referenced, not singletons
- * or methods that modify system singletons
+ * only constants from these headers should be referenced. methods that modify
+ * system singletons belong should be accessed from the network api instance
  */
 #include <netdb.h>
 #include <fcntl.h>
 
 template <net::PosixNetworkApi T>
-auto hints() -> typename T::AddrInfo
+auto new_bound_socket(T const & api, std::string const & port)
+        -> net::Socket<T>
 {
     typename T::AddrInfo hints{};
     hints.ai_family = AF_UNSPEC;
     hints.ai_flags = AI_PASSIVE;
     hints.ai_socktype = SOCK_STREAM;
-    return hints;
-}
 
-template <net::PosixNetworkApi T>
-auto new_bound_socket(T const & api, std::string const & port)
-        -> net::Socket<T>
-{
-    typename T::AddrInfo hints = detail::hints<T>();
     net::AddrInfoList<T> spec{api, nullptr, port.c_str(), &hints};
+
     net::Socket<T> socket{api, spec};
     socket.set_option(SOL_SOCKET, SO_REUSEADDR, 1);
     socket.fcntl(F_SETFL, O_NONBLOCK);
     socket.bind(*spec.current());
+
     return socket;
 }
 
