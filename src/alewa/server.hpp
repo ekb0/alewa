@@ -33,7 +33,7 @@ namespace detail {
 
 /*
  * only constants from these headers should be referenced. methods that modify
- * system singletons belong should be accessed from the network api instance
+ * system singletons should be accessed from the network api instance
  */
 #include <netdb.h>
 #include <fcntl.h>

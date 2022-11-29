@@ -59,7 +59,8 @@ private:
     int sockfd;
 
     Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};
-    auto err_msg(std::string const & func, std::string const & msg) -> std::string;
+    auto err_msg(std::string const & func, std::string const & msg)
+            -> std::string;
 
 public:
     Socket(T const & api, AddrInfoList<T>& spec);
