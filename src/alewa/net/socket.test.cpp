@@ -5,7 +5,8 @@
 
 namespace alewa::net::test {
 
-auto err_msg(std::string const & func, std::string const & msg) {
+auto err_msg(std::string const & func, std::string const & msg)
+{
     return func + " on socket 0: " + msg;
 }
 
@@ -96,25 +97,6 @@ TEST(socket_move)
     MockNetworkApi::set_is_closed(nullptr);
 }
 
-TEST(socket_bind_addrinfolist)
-{
-    MockNetworkApi api;
-    AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
-
-    Socket<MockNetworkApi> happy{api, spec};
-    happy.bind(spec);
-    try {
-        Socket<MockNetworkApi> sad{api, spec};
-        api.ret_code = MockNetworkApi::ERROR;
-        sad.bind(spec);
-    }
-    catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("bind", api.error()));
-        return;
-    }
-    BUG(std::string{"sad bind did not throw"});
-}
-
 TEST(socket_bind)
 {
     MockNetworkApi api;
@@ -132,25 +114,6 @@ TEST(socket_bind)
         return;
     }
     BUG(std::string{"sad bind did not throw"});
-}
-
-TEST(socket_connect_addrinfolist)
-{
-    MockNetworkApi api;
-    AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
-
-    Socket<MockNetworkApi> happy{api, spec};
-    happy.connect(spec);
-    try {
-        Socket<MockNetworkApi> sad{api, spec};
-        api.ret_code = MockNetworkApi::ERROR;
-        sad.connect(spec);
-    }
-    catch (std::runtime_error const & e) {
-        EXPECT_EQ(e.what(), err_msg("connect", api.error()));
-        return;
-    }
-    BUG(std::string{"sad connect did not throw"});
 }
 
 TEST(socket_connect)

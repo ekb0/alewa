@@ -39,9 +39,6 @@ public:
         iter = iter->ai_next;
         return iter;
     }
-
-    [[maybe_unused]]
-    void reset() noexcept { iter = head.get(); }
 };
 
 template <PosixNetworkApi T>
@@ -73,9 +70,6 @@ public:
 
     Socket(Socket&& other) noexcept;
     Socket& operator=(Socket&& other) noexcept;
-
-    void bind(AddrInfoList<T>& target);
-    void connect(AddrInfoList<T>& target);
 
     void bind(AddrInfo const & target);
     void connect(AddrInfo const & target);
@@ -119,30 +113,6 @@ auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 {
     std::swap(sockfd, other.sockfd);
     return *this;
-}
-
-template <PosixNetworkApi T>
-void Socket<T>::bind(AddrInfoList<T>& target)
-{
-    AddrInfo const * it = target.current();
-    for (; it != nullptr; it = target.advance()) {
-        if (T::SUCCESS == api.bind(sockfd, it->ai_addr, it->ai_addrlen)) {
-            return;
-        }
-    }
-    throw std::runtime_error{err_msg(__func__, api.error())};
-}
-
-template <PosixNetworkApi T>
-void Socket<T>::connect(AddrInfoList<T>& target)
-{
-    AddrInfo const * it = target.current();
-    for (; it != nullptr; it = target.advance()) {
-        if (T::SUCCESS == api.connect(sockfd, it->ai_addr, it->ai_addrlen)) {
-            return;
-        }
-    }
-    throw std::runtime_error{err_msg(__func__, api.error())};
 }
 
 template <PosixNetworkApi T>
