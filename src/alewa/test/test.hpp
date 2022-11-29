@@ -18,7 +18,7 @@ template <typename T>
 std::string tostr(T const & x)
 {
     if constexpr (std::is_convertible_v<T, std::string>) {
-        return std::string(x);
+        return std::string{x};
     }
     else {
         std::ostringstream ss;
@@ -56,7 +56,7 @@ std::string pretty_err(std::string const & expr, T const & x, U const & y)
 
 #define EXPECT_EQ(x, y)                                                        \
     if (x != y) {                                                              \
-        std::string expr = #x + std::string(" == ") + #y;                      \
+        std::string expr = #x + std::string{" == "} + #y;                      \
         fail_expr = alewa::test::pretty_err(expr, x, y);                       \
         return;                                                                \
     }                                                                          \
@@ -64,7 +64,7 @@ std::string pretty_err(std::string const & expr, T const & x, U const & y)
 
 #define EXPECT_NEQ(x, y)                                                       \
     if (x == y) {                                                              \
-        std::string expr = #x + std::string(" != ") + #y;                      \
+        std::string expr = #x + std::string{" != "} + #y;                      \
         fail_expr = alewa::test::pretty_err(expr, x, y);                       \
         return;                                                                \
     }                                                                          \

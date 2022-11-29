@@ -2,8 +2,9 @@
 
 namespace alewa::net {
 
-auto SystemNetworkApi::error(int err) const -> std::string { return strerror(err); }
-
-auto SystemNetworkApi::err_no() const -> int { return errno; }
+std::string SystemNetworkApi::error() const
+{
+    return ::strerror(errno);
+}
 
 }  // namespace alewa::net

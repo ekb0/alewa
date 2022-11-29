@@ -19,8 +19,7 @@ concept PosixNetworkApi = requires(T t)
     { T::SUCCESS } -> std::same_as<int const &>;
 
     /* methods */
-    { t.error(int{}) } -> std::same_as<std::string>;
-    { t.err_no() } -> std::same_as<int>;
+    { t.error() } -> std::same_as<std::string>;
 
     requires requires(char const * p_node, char const * p_service,
                       typename T::AddrInfo const * p_hints,
@@ -32,7 +31,7 @@ concept PosixNetworkApi = requires(T t)
         { t.freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
 
-    { t.gai_error(int{}) } -> std::same_as<char const *>;
+    { t.gai_strerror(int{}) } -> std::same_as<char const *>;
 
     { t.socket(int{}, int{}, int{}) } -> std::same_as<int>;
     { t.close(int{}) } -> std::same_as<int>;

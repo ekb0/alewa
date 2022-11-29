@@ -36,12 +36,10 @@ struct MockNetworkApi
     static int const SUCCESS;
     static int const ERRORNO;
 
-    [[nodiscard]] auto error(int val) const -> std::string
+    [[nodiscard]] auto error() const -> std::string
     {
-        return "Error: " + std::to_string(val);
+        return "Error: " + std::to_string(errorno);
     }
-
-    [[nodiscard]] int err_no() const { return errorno; }
 
     static constexpr char const * const err = "Error";
     int ret_code = SUCCESS;
@@ -51,7 +49,7 @@ struct MockNetworkApi
     static bool* p_is_freed;
     static void set_is_freed(bool* val) { p_is_freed = val; }
 
-    [[nodiscard]] auto gai_error(int) const -> char const * { return err; }
+    [[nodiscard]] auto gai_strerror(int) const -> char const * { return err; }
 
     int getaddrinfo(char const*, char const*, AddrInfo const*,
                     AddrInfo** p_ai_list) const

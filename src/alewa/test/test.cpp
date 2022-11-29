@@ -14,7 +14,7 @@ void run_test(TestCase const & test)
         test.run(fail_expr);
     }
     catch(std::runtime_error const & e) {
-        fail_expr = std::string("unexpected exception: ") + e.what();                                                           \
+        fail_expr = std::string{"unexpected exception: "} + e.what();                                                           \
     }
 
     if (!fail_expr.empty()) {

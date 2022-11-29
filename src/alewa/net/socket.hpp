@@ -23,7 +23,9 @@ public:
     {
         AddrInfo* l = nullptr;
         int ret = api.getaddrinfo(p_node, p_service, p_hints, &l);
-        if (ret != T::SUCCESS) { throw ret; }
+        if (ret != T::SUCCESS) {
+            throw std::runtime_error{ api.gai_strerror(ret) };
+        }
         head.reset(l);
         iter = l;
     }
@@ -90,7 +92,7 @@ Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
         sockfd = api.socket(it->ai_family, it->ai_socktype, it->ai_protocol);
         if (sockfd != NULL_FD) { return; }
     }
-    throw api.err_no();
+    throw std::runtime_error{ api.error() };
 }
 
 template <PosixNetworkApi T>
@@ -110,7 +112,6 @@ Socket<T>::Socket(Socket&& other) noexcept
 template <PosixNetworkApi T>
 auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 {
-    assert(&api == &other.api);
     std::swap(sockfd, other.sockfd);
     return *this;
 }
@@ -124,7 +125,7 @@ void Socket<T>::bind(AddrInfoList<T>& target)
             return;
         }
     }
-    throw api.err_no();
+    throw std::runtime_error{ api.error() };
 }
 
 template <PosixNetworkApi T>
@@ -136,14 +137,14 @@ void Socket<T>::connect(AddrInfoList<T>& target)
             return;
         }
     }
-    throw api.err_no();
+    throw std::runtime_error{ api.error() };
 }
 
 template <PosixNetworkApi T>
 void Socket<T>::bind(AddrInfo const & target)
 {
     if (T::ERROR == api.bind(sockfd, target.ai_addr, target.ai_addrlen)) {
-        throw api.err_no();
+        throw std::runtime_error{ api.error() };
     }
 }
 
@@ -151,7 +152,7 @@ template <PosixNetworkApi T>
 void Socket<T>::connect(AddrInfo const & target)
 {
     if (T::ERROR == api.connect(sockfd, target.ai_addr, target.ai_addrlen)) {
-        throw api.err_no();
+        throw std::runtime_error{ api.error() };
     }
 }
 
@@ -159,7 +160,7 @@ template <PosixNetworkApi T>
 void Socket<T>::listen(int backlog)
 {
     if (T::ERROR == api.listen(sockfd, backlog)) {
-        throw api.err_no();
+        throw std::runtime_error{ api.error() };
     }
 }
 
@@ -167,7 +168,9 @@ template <PosixNetworkApi T>
 auto Socket<T>::accept(SockInfo<T>& sockinfo) -> Socket<T>
 {
     int const fd = api.accept(sockfd, &(sockinfo.addr), &(sockinfo.addrlen));
-    if (fd == NULL_FD) { throw api.err_no(); }
+    if (fd == NULL_FD) {
+        throw std::runtime_error{ api.error() };
+    }
     return Socket{api, fd};
 }
 

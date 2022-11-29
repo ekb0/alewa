@@ -21,12 +21,11 @@ struct SystemNetworkApi
     static int const ERROR = -1;
     static int const SUCCESS = 0;
 
-    [[nodiscard]] auto error(int err) const -> std::string;
-    [[nodiscard]] auto err_no() const -> int;
+    [[nodiscard]] std::string error() const;
 
     NETAPI_DELEGATE(getaddrinfo, ::getaddrinfo);
     NETAPI_DELEGATE(freeaddrinfo, ::freeaddrinfo);
-    NETAPI_DELEGATE(gai_error, ::gai_strerror);
+    NETAPI_DELEGATE(gai_strerror, ::gai_strerror);
 
     NETAPI_DELEGATE(socket, ::socket);
     NETAPI_DELEGATE(close, ::close);
