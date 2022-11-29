@@ -8,13 +8,12 @@
 
 #include <string>
 
+#include "utils.hpp"
+
 namespace alewa::net {
 
 struct SystemNetworkApi
 {
-    #define NETAPI_DELEGATE(func, delegate)                                    \
-            decltype(&(delegate)) const func = (delegate)
-
     using AddrInfo = ::addrinfo;
     using AiDeleter = decltype(&::freeaddrinfo);
     using SockAddr = ::sockaddr;
@@ -25,19 +24,19 @@ struct SystemNetworkApi
 
     [[nodiscard]] std::string error() const;
 
-    NETAPI_DELEGATE(getaddrinfo, ::getaddrinfo);
-    NETAPI_DELEGATE(freeaddrinfo, ::freeaddrinfo);
-    NETAPI_DELEGATE(gai_strerror, ::gai_strerror);
+    ALW_DELEGATE(getaddrinfo, ::getaddrinfo);
+    ALW_DELEGATE(freeaddrinfo, ::freeaddrinfo);
+    ALW_DELEGATE(gai_strerror, ::gai_strerror);
 
-    NETAPI_DELEGATE(socket, ::socket);
-    NETAPI_DELEGATE(close, ::close);
-    NETAPI_DELEGATE(bind, ::bind);
-    NETAPI_DELEGATE(connect, ::connect);
-    NETAPI_DELEGATE(listen, ::listen);
-    NETAPI_DELEGATE(accept, ::accept);
-    NETAPI_DELEGATE(setsockopt, ::setsockopt);
+    ALW_DELEGATE(socket, ::socket);
+    ALW_DELEGATE(close, ::close);
+    ALW_DELEGATE(bind, ::bind);
+    ALW_DELEGATE(connect, ::connect);
+    ALW_DELEGATE(listen, ::listen);
+    ALW_DELEGATE(accept, ::accept);
+    ALW_DELEGATE(setsockopt, ::setsockopt);
 
-    NETAPI_DELEGATE(fcntl, ::fcntl);
+    ALW_DELEGATE(fcntl, ::fcntl);
 };
 
 }  // namespace alewa::net

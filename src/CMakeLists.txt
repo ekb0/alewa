@@ -21,9 +21,12 @@ target_link_options(alewa_linker_flags
 add_executable(alewa
     alewa.cpp
     alewa/server.cpp
+    alewa/utils.cpp
     alewa/net/socket.cpp
     alewa/net/netapi.cpp
     alewa/net/netapi_system.cpp
+    alewa/io/pollapi.cpp
+    alewa/io/pollapi_system.cpp
 )
 
 target_link_libraries(alewa
