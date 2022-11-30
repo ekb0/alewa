@@ -1,25 +1,20 @@
 #pragma once
 
 #include <concepts>
-#include <string>
+#include "sys/err_desc.hpp"
 
 namespace alewa::net {
 
 template <typename T>
 concept PosixNetworkApi = requires(T t)
 {
+    requires alewa::sys::ErrorDescription<T>;
+
     /* types */
     typename T::AddrInfo;
     typename T::AiDeleter;
     typename T::SockAddr;
     typename T::SockLen_t;
-
-    /* constants */
-    { T::ERROR } -> std::same_as<int const &>;
-    { T::SUCCESS } -> std::same_as<int const &>;
-
-    /* methods */
-    { t.error() } -> std::same_as<std::string>;
 
     requires requires(char const * p_node, char const * p_service,
                       typename T::AddrInfo const * p_hints,

@@ -59,8 +59,7 @@ private:
     int sockfd;
 
     Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};
-    auto err_msg(std::string const & func, std::string const & msg)
-            -> std::string;
+    auto err_msg(std::string const & func) -> std::string;
 
 public:
     Socket(T const & api, AddrInfoList<T>& spec);
@@ -120,7 +119,7 @@ template <PosixNetworkApi T>
 void Socket<T>::bind(AddrInfo const & target)
 {
     if (T::ERROR == api.bind(sockfd, target.ai_addr, target.ai_addrlen)) {
-        throw std::runtime_error{err_msg(__func__, api.error())};
+        throw std::runtime_error{err_msg(__func__)};
     }
 }
 
@@ -128,7 +127,7 @@ template <PosixNetworkApi T>
 void Socket<T>::connect(AddrInfo const & target)
 {
     if (T::ERROR == api.connect(sockfd, target.ai_addr, target.ai_addrlen)) {
-        throw std::runtime_error{err_msg(__func__, api.error())};
+        throw std::runtime_error{err_msg(__func__)};
     }
 }
 
@@ -136,7 +135,7 @@ template <PosixNetworkApi T>
 void Socket<T>::listen(int backlog)
 {
     if (T::ERROR == api.listen(sockfd, backlog)) {
-        throw std::runtime_error{err_msg(__func__, api.error())};
+        throw std::runtime_error{err_msg(__func__)};
     }
 }
 
@@ -145,7 +144,7 @@ auto Socket<T>::accept(SockInfo<T>& client_info) -> Socket<T>
 {
     int const fd = api.accept(sockfd, &client_info.addr, &client_info.addrlen);
     if (fd == NULL_FD) {
-        throw std::runtime_error{err_msg(__func__, api.error())};
+        throw std::runtime_error{err_msg(__func__)};
     }
     return Socket{api, fd};
 }
@@ -155,7 +154,7 @@ void Socket<T>::set_option(int level, int optname, int const optval)
 {
     if (T::ERROR == api.setsockopt(sockfd, level, optname,
                                    &optval, sizeof(optval))) {
-        throw std::runtime_error{err_msg(__func__, api.error())};
+        throw std::runtime_error{err_msg(__func__)};
     }
 }
 
@@ -163,15 +162,15 @@ template <PosixNetworkApi T>
 void Socket<T>::fcntl(int cmd, int arg)
 {
     if (T::ERROR == api.fcntl(sockfd, cmd, arg)) {
-        throw std::runtime_error{err_msg(__func__, api.error())};
+        throw std::runtime_error{err_msg(__func__)};
     }
 }
 
 template <PosixNetworkApi T>
-auto Socket<T>::err_msg(std::string const & func, std::string const & msg)
+auto Socket<T>::err_msg(std::string const & func)
         -> std::string
 {
-    return func + " on socket " + std::to_string(sockfd) + ": " + msg;
+    return func + " on socket " + std::to_string(sockfd) + ": " + api.error();
 }
 
 }  // namespace alewa::net

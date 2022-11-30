@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cerrno>
-#include <cstring>
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -9,20 +7,16 @@
 #include <string>
 
 #include "utils.hpp"
+#include "sys/err_desc.hpp"
 
 namespace alewa::net {
 
-struct SystemNetworkApi
+struct SystemNetworkApi : public sys::SystemErrorDescription
 {
     using AddrInfo = ::addrinfo;
     using AiDeleter = decltype(&::freeaddrinfo);
     using SockAddr = ::sockaddr;
     using SockLen_t = ::socklen_t;
-
-    static int const ERROR = -1;
-    static int const SUCCESS = 0;
-
-    [[nodiscard]] std::string error() const;
 
     ALW_DELEGATE(getaddrinfo, ::getaddrinfo);
     ALW_DELEGATE(freeaddrinfo, ::freeaddrinfo);

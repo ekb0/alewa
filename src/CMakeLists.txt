@@ -22,11 +22,13 @@ add_executable(alewa
     alewa.cpp
     alewa/server.cpp
     alewa/utils.cpp
+    alewa/sys/err_desc.cpp
     alewa/net/socket.cpp
     alewa/net/netapi.cpp
     alewa/net/netapi_system.cpp
     alewa/io/ioapi.cpp
     alewa/io/ioapi_system.cpp
+    alewa/io/poller.cpp
 )
 
 target_link_libraries(alewa

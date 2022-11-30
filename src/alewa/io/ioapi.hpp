@@ -1,10 +1,15 @@
+#pragma once
+
 #include <concepts>
+#include "sys/err_desc.hpp"
 
 namespace alewa::io {
 
 template <typename T>
 concept IoApi = requires(T t)
 {
+    requires alewa::sys::ErrorDescription<T>;
+
     /* types */
     typename T::PollFd;
     typename T::Nfds_t;
