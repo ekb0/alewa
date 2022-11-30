@@ -45,7 +45,7 @@ template <PosixNetworkApi T>
 struct SockInfo
 {
     typename T::SockAddr addr;
-    typename T::SockLen_t addrlen;
+    typename T::SockLen addrlen;
 };
 
 template <PosixNetworkApi T>

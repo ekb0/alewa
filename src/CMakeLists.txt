@@ -43,7 +43,8 @@ target_include_directories(alewa
 )
 
 add_executable(alewa_test
-    alewa/test/test.cpp
+    alewa.test.cpp
+    alewa/test/test_utils.cpp
     alewa/net/netapi_mock.cpp
 )
 

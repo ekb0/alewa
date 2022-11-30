@@ -4,101 +4,74 @@
 
 namespace alewa::net::test {
 
-struct sockaddr
-{
-    unsigned short sa_family;
-    char sa_data[14];
-};
-
-struct addrinfo
-{
-    int ai_flags;
-    int ai_family;
-    int ai_socktype;
-    int ai_protocol;
-    unsigned short ai_addrlen;
-    char* ai_canonname;
-
-    sockaddr* ai_addr;
-    addrinfo *ai_next = nullptr;
-};
-
 struct MockNetworkApi
 {
-    using AddrInfo = addrinfo;
-    using AiDeleter = void(*)(AddrInfo*);
-    using SockAddr = sockaddr;
-    using SockLen_t = unsigned short;
+    struct SockAddr {
+        unsigned short sa_family;
+        char sa_data[14];
+    };
 
-    mutable AddrInfo ai{};
-
-    static int const ERROR;
-    static int const SUCCESS;
-    static int const ERRORNO;
-
-    [[nodiscard]] auto error() const -> std::string
+    struct AddrInfo
     {
-        return "Error: " + std::to_string(errorno);
-    }
+        int ai_family;
+        int ai_socktype;
+        int ai_protocol;
+        unsigned short ai_addrlen;
+
+        SockAddr* ai_addr;
+        AddrInfo *ai_next = nullptr;
+    };
+
+    using AiDeleter = void(*)(AddrInfo*);
+    using SockLen = unsigned short;
 
     static constexpr char const * const err = "Error";
+    static int const ERROR = -1;
+    static int const SUCCESS = 0;
+    static int const ERRORNO = -5;
+
+    static bool* p_is_freed;
+    static bool* p_is_closed;
+
+    mutable AddrInfo ai{};
     int ret_code = SUCCESS;
     int errorno = ERRORNO;
 
+    static
+    void set_is_freed(bool* val) { p_is_freed = val; }
 
-    static bool* p_is_freed;
-    static void set_is_freed(bool* val) { p_is_freed = val; }
+    static
+    void set_is_closed(bool* val) { p_is_closed = val; };
 
-    [[nodiscard]] auto gai_strerror(int) const -> char const * { return err; }
+    [[nodiscard]]
+    auto error() const -> std::string;
 
-    int getaddrinfo(char const*, char const*, AddrInfo const*,
-                    AddrInfo** p_ai_list) const
-    {
-        *p_ai_list = &ai;
-        return ret_code;
-    }
+    [[nodiscard]]
+    auto gai_strerror(int) const -> char const * { return err; }
 
-    static void freeaddrinfo(AddrInfo*)
-    {
-        if (p_is_freed) { *p_is_freed = true; }
-    }
+    auto getaddrinfo(char const*, char const*, AddrInfo const*,
+                    AddrInfo** p_ai_list) const -> int;
 
-    static bool* p_is_closed;
-    static void set_is_closed(bool* val) { p_is_closed = val; };
+    static
+    void freeaddrinfo(AddrInfo*);
 
-    [[nodiscard]] int socket (int, int, int) const { return ret_code; }
+    [[nodiscard]]
+    auto socket(int, int, int) const -> int { return ret_code; }
 
-    int close(int) const
-    {
-        if (p_is_closed) { *p_is_closed = true; }
-        return SUCCESS;
-    }
+    auto close(int) const -> int;
 
-    int bind(int, SockAddr const*, SockLen_t) const { return ret_code; }
-    int connect(int, SockAddr const*, SockLen_t) const { return ret_code; }
-    int listen(int, int) const { return ret_code; }
+    auto bind(int, SockAddr const*, SockLen) const { return ret_code; }
 
-    int accept(int, SockAddr* p_addr, SockLen_t* p_addrlen) const
-    {
-        if (ret_code == ERROR) { return ret_code; }
-        *p_addr = *ai.ai_addr;
-        *p_addrlen = sizeof(SockLen_t);
-        return ret_code;
-    }
+    auto connect(int, SockAddr const*, SockLen) const { return ret_code; }
 
-    int setsockopt(int, int, int, void const *, SockLen_t) const
-    {
-        return ret_code;
-    }
+    auto listen(int, int) const { return ret_code; }
 
-    int fcntl(int, int, int) const { return ret_code; }
+    auto accept(int, SockAddr* p_addr, SockLen* p_addrlen) const -> int;
+
+    auto setsockopt(int, int, int, void const *, SockLen)
+            const { return ret_code; }
+
+    auto fcntl(int, int, int) const { return ret_code; }
 };
 
-inline int const MockNetworkApi::ERROR = -1;
-inline int const MockNetworkApi::SUCCESS = 0;
-inline int const MockNetworkApi::ERRORNO = -5;
-
-inline bool* MockNetworkApi::p_is_freed = nullptr;
-inline bool* MockNetworkApi::p_is_closed = nullptr;
-
-} // namespace alewa::net::test
+}  // namespace alewa::net::test

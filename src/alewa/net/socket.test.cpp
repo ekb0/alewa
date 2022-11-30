@@ -1,4 +1,4 @@
-#include "test/test.hpp"
+#include "test/test_utils.hpp"
 
 #include "socket.hpp"
 #include "netapi_mock.hpp"
@@ -163,7 +163,7 @@ ALW_TEST(socket_accept)
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
     Socket<MockNetworkApi> sock{api, spec};
 
-    sockaddr addr = {0xB00, {0,69,2}};
+    MockNetworkApi::SockAddr addr = {0xB00, {0,69,2}};
     api.ai.ai_addr = &addr;
 
     SockInfo<MockNetworkApi> happy_info{};

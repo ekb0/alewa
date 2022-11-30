@@ -16,7 +16,7 @@ struct SystemNetworkApi : public sys::SystemErrorDescription
     using AddrInfo = ::addrinfo;
     using AiDeleter = decltype(&::freeaddrinfo);
     using SockAddr = ::sockaddr;
-    using SockLen_t = ::socklen_t;
+    using SockLen = ::socklen_t;
 
     ALW_DELEGATE(getaddrinfo, ::getaddrinfo);
     ALW_DELEGATE(freeaddrinfo, ::freeaddrinfo);
@@ -29,7 +29,6 @@ struct SystemNetworkApi : public sys::SystemErrorDescription
     ALW_DELEGATE(listen, ::listen);
     ALW_DELEGATE(accept, ::accept);
     ALW_DELEGATE(setsockopt, ::setsockopt);
-
     ALW_DELEGATE(fcntl, ::fcntl);
 };
 

@@ -19,33 +19,23 @@ private:
 public:
     Poller(T const & api) : api(api){}
 
-    auto poll(int timeout) -> int;
-    void add(int fd, short events);
-    void del(int idx);
-};
+    void add(int fd, short events) { pfds.emplace_back({fd, events, 0}); }
 
-template <IoApi T>
-auto Poller<T>::poll(int timeout) -> int
-{
-    int const ret = api.poll(&pfds[0], pfds.size(), timeout);
-    if (ret == T::ERROR) {
-        throw std::runtime_error{"poll failed: " + api.error()};
+    void del(int idx)
+    {
+        assert(0 <= idx && idx < pfds.size());
+        pfds[idx] = std::move(pfds.back());
+        pfds.pop_back();
     }
-    return ret;
-}
 
-template <IoApi T>
-void Poller<T>::add(int fd, short events)
-{
-    pfds.emplace_back({fd, events, 0});
-}
-
-template <IoApi T>
-void Poller<T>::del(int idx)
-{
-    assert(0 <= idx && idx < pfds.size());
-    pfds[idx] = std::move(pfds.back());
-    pfds.pop_back();
-}
+    auto poll(int timeout) -> int
+    {
+        int const ret = api.poll(&pfds[0], pfds.size(), timeout);
+        if (ret == T::ERROR) {
+            throw std::runtime_error{"poll failed: " + api.error()};
+        }
+        return ret;
+    }
+};
 
 }  // namespace alewa::io

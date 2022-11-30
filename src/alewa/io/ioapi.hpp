@@ -10,12 +10,10 @@ concept IoApi = requires(T t)
 {
     requires alewa::sys::ErrorDescription<T>;
 
-    /* types */
     typename T::PollFd;
-    typename T::Nfds_t;
+    typename T::Nfds;
 
-    /* methods */
-    requires requires (typename T::PollFd* fds, typename T::Nfds_t nfds)
+    requires requires (typename T::PollFd* fds, typename T::Nfds nfds)
     {
         { t.poll(fds, nfds, int{}) } -> std::same_as<int>;
     };

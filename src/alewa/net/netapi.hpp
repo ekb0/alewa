@@ -10,11 +10,10 @@ concept PosixNetworkApi = requires(T t)
 {
     requires alewa::sys::ErrorDescription<T>;
 
-    /* types */
     typename T::AddrInfo;
     typename T::AiDeleter;
     typename T::SockAddr;
-    typename T::SockLen_t;
+    typename T::SockLen;
 
     requires requires(char const * p_node, char const * p_service,
                       typename T::AddrInfo const * p_hints,
@@ -34,9 +33,9 @@ concept PosixNetworkApi = requires(T t)
 
     requires requires(typename T::SockAddr const * addr,
                       typename T::SockAddr* p_addr,
-                      typename T::SockLen_t addrlen,
-                      typename T::SockLen_t* p_addrlen,
-                      typename T::SockLen_t optlen,
+                      typename T::SockLen addrlen,
+                      typename T::SockLen* p_addrlen,
+                      typename T::SockLen optlen,
                       void const * p_optval)
     {
         { t.bind(int{}, addr, addrlen) } -> std::same_as<int>;
