@@ -58,9 +58,6 @@ private:
     T const & api;
     int sockfd;
 
-    Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};
-    auto err_msg(std::string const & func) -> std::string;
-
 public:
     Socket(T const & api, AddrInfoList<T>& spec);
     ~Socket();
@@ -80,7 +77,12 @@ public:
     void set_option(int level, int optname, int optval);
     void fcntl(int cmd, int arg);
 
-    [[nodiscard]] auto fd() const noexcept -> int { return sockfd; }
+    [[nodiscard]]
+    auto fd() const noexcept -> int { return sockfd; }
+
+private:
+    Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};
+    auto err_msg(std::string const & func) -> std::string;
 };
 
 template <PosixNetworkApi T>

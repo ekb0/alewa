@@ -3,60 +3,79 @@
 #include <string>
 
 #include "net/socket.hpp"
+#include "io/poller.hpp"
 
 namespace alewa {
 
-namespace detail {
+extern int const AI_FAMILY;
+extern int const AI_FLAGS;
+extern int const AI_SOCKTYPE;
 
-template <net::PosixNetworkApi T>
-net::Socket<T> new_bound_socket(T const & api, std::string const & port);
+extern int const SOCK_LEVEL;
+extern int const SOCK_OPTNAME;
 
-}  // namespace alewa::detail
+extern int const F_CMD;
+extern int const F_ARG;
 
-template <net::PosixNetworkApi T>
+extern short const INPUT_EVENTS;
+
+template <net::PosixNetworkApi T, io::IoApi U>
 class Server
 {
+private:
+    T const & netapi;
+    U const & ioapi;
+
 public:
-    void start(T const & api, std::string const & port, int backlog);
+    Server(T const & netapi, U const & ioapi) : netapi(netapi), ioapi(ioapi) {}
+    void start(std::string const & port, int backlog);
+
+private:
+    auto new_bound_socket(std::string const & port) -> net::Socket<T>;
+    auto new_poller(int listen_fd) -> io::Poller<U>;
 };
 
-template <net::PosixNetworkApi T>
-void Server<T>::start(T const & api, std::string const & port, int backlog)
+template <net::PosixNetworkApi T, io::IoApi U>
+void Server<T, U>::start(std::string const & port, int backlog)
 {
-    net::Socket<T> socket = detail::new_bound_socket(api, port);
+    net::Socket<T> socket = new_bound_socket(port);
+    io::Poller<U> poller = new_poller(socket.fd());
     socket.listen(backlog);
-    net::SockInfo<T> info;
-    net::Socket<T> accepted = socket.accept(info);
+
+    int nready;
+    for (;;) {
+        nready = poller.poll(0);
+        if (nready == 1) {
+            net::SockInfo<T> info;
+            net::Socket<T> accepted = socket.accept(info);
+        }
+    }
 }
 
-namespace detail {
-
-/*
- * only constants from these headers should be referenced. methods that modify
- * system singletons should be accessed from the network api instance
- */
-#include <netdb.h>
-#include <fcntl.h>
-
-template <net::PosixNetworkApi T>
-auto new_bound_socket(T const & api, std::string const & port)
-        -> net::Socket<T>
+template <net::PosixNetworkApi T, io::IoApi U>
+auto Server<T, U>::new_bound_socket(std::string const & port) -> net::Socket<T>
 {
     typename T::AddrInfo hints{};
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_flags = AI_PASSIVE;
-    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_family = AI_FAMILY;
+    hints.ai_flags = AI_FLAGS;
+    hints.ai_socktype = AI_SOCKTYPE;
 
-    net::AddrInfoList<T> spec{api, nullptr, port.c_str(), &hints};
+    net::AddrInfoList<T> spec{netapi, nullptr, port.c_str(), &hints};
 
-    net::Socket<T> socket{api, spec};
-    socket.set_option(SOL_SOCKET, SO_REUSEADDR, 1);
-    socket.fcntl(F_SETFL, O_NONBLOCK);
+    net::Socket<T> socket{netapi, spec};
+    socket.set_option(SOCK_LEVEL, SOCK_OPTNAME, 1);
+    socket.fcntl(F_CMD, F_ARG);
     socket.bind(*spec.current());
 
     return socket;
 }
 
-}  // namespace alewa::detail
+template <net::PosixNetworkApi T, io::IoApi U>
+auto Server<T, U>::new_poller(int listen_fd) -> io::Poller<U>
+{
+    io::Poller<U> poller{ioapi};
+    poller.fds().push_back({listen_fd, INPUT_EVENTS, 0});
+    return poller;
+}
 
 }  // namespace alewa

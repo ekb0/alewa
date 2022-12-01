@@ -1,19 +1,19 @@
 #include "net/netapi_system.hpp"
-
+#include "io/ioapi_system.hpp"
 #include "server.hpp"
 
 int main(/*int argc, char* argv[]*/)
 {
     using namespace alewa;
-    using namespace alewa::net;
 
     std::string const PORT = "8080";
     int const BACKLOG = 10;
 
-    SystemNetworkApi api;
+    net::SystemNetworkApi netapi;
+    io::SystemIoApi ioapi;
 
-    Server<SystemNetworkApi> server;
-    server.start(api, PORT, BACKLOG);
+    Server<net::SystemNetworkApi, io::SystemIoApi> server{netapi, ioapi};
+    server.start(PORT, BACKLOG);
 
     return 0;
 }

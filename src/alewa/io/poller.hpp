@@ -12,21 +12,12 @@ class Poller
 {
 private:
     using PollFd = typename T::PollFd;
-
     T const & api;
     std::vector<PollFd> pfds;
 
 public:
+    explicit
     Poller(T const & api) : api(api){}
-
-    void add(int fd, short events) { pfds.emplace_back({fd, events, 0}); }
-
-    void del(int idx)
-    {
-        assert(0 <= idx && idx < pfds.size());
-        pfds[idx] = std::move(pfds.back());
-        pfds.pop_back();
-    }
 
     auto poll(int timeout) -> int
     {
@@ -36,6 +27,8 @@ public:
         }
         return ret;
     }
+
+    auto fds() noexcept -> std::vector<PollFd>& { return pfds; }
 };
 
 }  // namespace alewa::io
