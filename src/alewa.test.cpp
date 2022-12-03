@@ -7,14 +7,14 @@ using namespace alewa::test;
 
 static size_t passed = 0;
 
-void run_test(TestCase const & test)
+void run(TestCase const & test)
 {
     std::string fail_expr{};
     try {
         test.run(fail_expr);
     }
     catch(std::runtime_error const & e) {
-        fail_expr = std::string{"unexpected exception: "} + e.what();                                                           \
+        fail_expr = std::string{"unexpected exception: "} + e.what();
     }
 
     if (!fail_expr.empty()) {
@@ -27,10 +27,10 @@ void run_test(TestCase const & test)
 
 int main()
 {
-    for (auto const & test : tests) { run_test(test); }
+    for (auto const & test : alewa::test::tests) { run(test); }
     std::cout << std::endl << passed << " out of " << tests.size() << " passed"
               << std::endl;
 
-    size_t nfails = tests.size() - passed;
+    size_t nfails = alewa::test::tests.size() - passed;
     return (nfails == 0) ? 0 : 1;
 }
