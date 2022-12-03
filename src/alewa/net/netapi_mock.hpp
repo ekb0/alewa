@@ -30,18 +30,18 @@ struct MockNetworkApi
     static int const SUCCESS = 0;
     static int const ERRORNO = -5;
 
-    static bool* p_is_freed;
-    static bool* p_is_closed;
+    static bool* is_freed;
+    static bool* is_closed;
 
     mutable AddrInfo ai{};
     int ret_code = SUCCESS;
     int errorno = ERRORNO;
 
     static
-    void set_is_freed(bool* val) { p_is_freed = val; }
+    void set_is_freed(bool* val) { is_freed = val; }
 
     static
-    void set_is_closed(bool* val) { p_is_closed = val; };
+    void set_is_closed(bool* val) { is_closed = val; };
 
     [[nodiscard]]
     auto error() const -> std::string;
@@ -50,7 +50,7 @@ struct MockNetworkApi
     auto gai_strerror(int) const -> char const * { return err; }
 
     auto getaddrinfo(char const*, char const*, AddrInfo const*,
-                    AddrInfo** p_ai_list) const -> int;
+                    AddrInfo** ai_list) const -> int;
 
     static
     void freeaddrinfo(AddrInfo*);
@@ -66,7 +66,7 @@ struct MockNetworkApi
 
     auto listen(int, int) const { return ret_code; }
 
-    auto accept(int, SockAddr* p_addr, SockLen* p_addrlen) const -> int;
+    auto accept(int, SockAddr* addr, SockLen* addrlen) const -> int;
 
     auto setsockopt(int, int, int, void const *, SockLen)
             const { return ret_code; }

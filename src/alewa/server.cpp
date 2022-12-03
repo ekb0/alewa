@@ -6,8 +6,8 @@
 
 namespace alewa {
 
-int const AI_FAMILY = AF_UNSPEC;
 int const AI_FLAGS = AI_PASSIVE;
+int const AI_FAMILY = AF_UNSPEC;
 int const AI_SOCKTYPE = SOCK_STREAM;
 
 int const SOCK_LEVEL = SOL_SOCKET;

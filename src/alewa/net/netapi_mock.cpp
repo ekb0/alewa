@@ -2,8 +2,8 @@
 
 namespace alewa::net::test {
 
-bool* MockNetworkApi::p_is_freed = nullptr;
-bool* MockNetworkApi::p_is_closed = nullptr;
+bool* MockNetworkApi::is_freed = nullptr;
+bool* MockNetworkApi::is_closed = nullptr;
 
 auto MockNetworkApi::error() const -> std::string
 {
@@ -11,29 +11,29 @@ auto MockNetworkApi::error() const -> std::string
 }
 
 auto MockNetworkApi::getaddrinfo(char const*, char const*, AddrInfo const*,
-                AddrInfo** p_ai_list) const -> int
+                AddrInfo** ai_list) const -> int
 {
-    *p_ai_list = &ai;
+    *ai_list = &ai;
     return ret_code;
 }
 
 void MockNetworkApi::freeaddrinfo(AddrInfo*)
 {
-    if (p_is_freed) { *p_is_freed = true; }
+    if (is_freed) { *is_freed = true; }
 }
 
 auto MockNetworkApi::close(int) const -> int
 {
-    if (p_is_closed) { *p_is_closed = true; }
+    if (is_closed) { *is_closed = true; }
     return SUCCESS;
 }
 
-auto MockNetworkApi::accept(int, SockAddr* p_addr, SockLen* p_addrlen) const
+auto MockNetworkApi::accept(int, SockAddr* addr, SockLen* addrlen) const
         -> int
 {
     if (ret_code == ERROR) { return ret_code; }
-    *p_addr = *ai.ai_addr;
-    *p_addrlen = sizeof(SockLen);
+    *addr = *ai.ai_addr;
+    *addrlen = sizeof(SockLen);
     return ret_code;
 }
 

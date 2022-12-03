@@ -15,12 +15,12 @@ concept PosixNetworkApi = requires(T t)
     typename T::SockAddr;
     typename T::SockLen;
 
-    requires requires(char const * p_node, char const * p_service,
-                      typename T::AddrInfo const * p_hints,
+    requires requires(char const * node, char const * service,
+                      typename T::AddrInfo const * hints,
                       typename T::AddrInfo** p_ai_list,
                       typename T::AddrInfo* ai_list)
     {
-        { t.getaddrinfo(p_node, p_service, p_hints, p_ai_list) }
+        { t.getaddrinfo(node, service, hints, p_ai_list) }
                 -> std::same_as<int>;
         { t.freeaddrinfo(ai_list) } -> std::same_as<void>;
     };
@@ -32,16 +32,16 @@ concept PosixNetworkApi = requires(T t)
     { t.listen(int{}, int{}) } -> std::same_as<int>;
 
     requires requires(typename T::SockAddr const * addr,
-                      typename T::SockAddr* p_addr,
                       typename T::SockLen addrlen,
-                      typename T::SockLen* p_addrlen,
+                      typename T::SockAddr* recv_addr,
+                      typename T::SockLen* recv_addrlen,
                       typename T::SockLen optlen,
-                      void const * p_optval)
+                      void const * optval)
     {
         { t.bind(int{}, addr, addrlen) } -> std::same_as<int>;
         { t.connect(int{}, addr, addrlen) } -> std::same_as<int>;
-        { t.accept(int{}, p_addr, p_addrlen) } -> std::same_as<int>;
-        { t.setsockopt(int{}, int{}, int{}, p_optval, optlen) }
+        { t.accept(int{}, recv_addr, recv_addrlen) } -> std::same_as<int>;
+        { t.setsockopt(int{}, int{}, int{}, optval, optlen) }
                 -> std::same_as<int>;
     };
 

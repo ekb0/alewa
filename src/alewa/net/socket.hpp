@@ -17,12 +17,12 @@ private:
     AddrInfo const * iter;
 
 public:
-    AddrInfoList(T const & api, char const * p_node, char const * p_service,
-                 AddrInfo const * p_hints)
+    AddrInfoList(T const & api, char const * node, char const * service,
+                 AddrInfo const * hints)
             : head(nullptr, api.freeaddrinfo)
     {
         AddrInfo* l = nullptr;
-        int ret = api.getaddrinfo(p_node, p_service, p_hints, &l);
+        int ret = api.getaddrinfo(node, service, hints, &l);
         if (ret != T::SUCCESS) {
             std::string m = "getaddrinfo: ";
             throw std::runtime_error{m + api.gai_strerror(ret)};
