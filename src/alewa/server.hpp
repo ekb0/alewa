@@ -90,7 +90,7 @@ auto Server<T, U>::create_listener(std::string const & port) -> net::Socket<T>
 template <net::PosixNetworkApi T, io::IoApi U>
 void Server<T, U>::Registry::add(net::Socket<T>&& client)
 {
-    assert(clients.find(client.fd()) != clients.end());
+    assert(clients.find(client.fd()) == clients.end());
     pollfds.push_back({client.fd(), INPUT_EVENTS, 0});
     clients.insert(std::pair{client.fd(), std::move(client)});
 }
