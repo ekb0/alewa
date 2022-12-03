@@ -97,6 +97,28 @@ ALW_TEST(socket_move)
     MockNetworkApi::set_is_closed(nullptr);
 }
 
+ALW_TEST(socket_comparison)
+{
+    MockNetworkApi api;
+    AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
+
+    api.ret_code = 45;
+    Socket<MockNetworkApi> x{api, spec};
+    ALW_EXPECT_EQ(x.fd(), 45);
+    ALW_EXPECT_EQ(x, x);
+
+    api.ret_code = 99;
+    Socket<MockNetworkApi> y{api, spec};
+    ALW_EXPECT_EQ(y.fd(), 99);
+    ALW_EXPECT_EQ(y, y);
+
+    ALW_EXPECT_EQ(x != y, true);
+    ALW_EXPECT_EQ(x  < y, true);
+    ALW_EXPECT_EQ(x <= y, true);
+    ALW_EXPECT_EQ(y  > x, true);
+    ALW_EXPECT_EQ(y >= x, true);
+}
+
 ALW_TEST(socket_bind)
 {
     MockNetworkApi api;
@@ -189,37 +211,37 @@ ALW_TEST(socket_set_option)
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
     Socket<MockNetworkApi> happy{api, spec};
-    happy.set_option(1, 2, 3);
+    happy.set_socket_option(1, 2, 3);
 
     std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
-        sad.set_option(1, 2, 3);
+        sad.set_socket_option(1, 2, 3);
     }
     catch (std::runtime_error const & e) {
         error = e.what();
     }
-    ALW_EXPECT_EQ(error, err_msg("set_option", api.error()));
+    ALW_EXPECT_EQ(error, err_msg("set_socket_option", api.error()));
 }
 
-ALW_TEST(socket_fcntl)
+ALW_TEST(socket_set_file_option)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
     Socket<MockNetworkApi> happy{api, spec};
-    happy.fcntl(1, 2);
+    happy.set_file_option(1, 2);
 
     std::string error{};
     try {
         Socket<MockNetworkApi> sad{api, spec};
         api.ret_code = MockNetworkApi::ERROR;
-        sad.fcntl(1, 2);
+        sad.set_file_option(1, 2);
     }
     catch (std::runtime_error const & e) {
         error = e.what();
     }
-    ALW_EXPECT_EQ(error, err_msg("fcntl", api.error()));
+    ALW_EXPECT_EQ(error, err_msg("set_file_option", api.error()));
 }
 
 }  // namespace alewa::net::test

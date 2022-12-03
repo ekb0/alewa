@@ -68,14 +68,17 @@ public:
     Socket(Socket&& other) noexcept;
     Socket& operator=(Socket&& other) noexcept;
 
+    auto operator<=>(Socket const & other) const -> int;
+    auto operator==(Socket const & other) const -> bool;
+
     void bind(AddrInfo const & target);
     void connect(AddrInfo const & target);
 
     void listen(int backlog);
     auto accept(SockInfo<T>& client_info) -> Socket;
 
-    void set_option(int level, int optname, int optval);
-    void fcntl(int cmd, int arg);
+    void set_file_option(int cmd, int arg);
+    void set_socket_option(int level, int optname, int optval);
 
     [[nodiscard]]
     auto fd() const noexcept -> int { return sockfd; }
@@ -84,6 +87,21 @@ private:
     Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};
     auto err_msg(std::string const & func) -> std::string;
 };
+
+}  // namespace alewa::net
+
+template<alewa::net::PosixNetworkApi T>
+struct std::hash<alewa::net::Socket<T>>
+{
+    auto operator()(alewa::net::Socket<T> const& s) const noexcept
+            -> std::size_t
+    {
+        return std::hash<int>{}(s.fd());
+    }
+};
+
+
+namespace alewa::net {
 
 template <PosixNetworkApi T>
 Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
@@ -115,6 +133,18 @@ auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 {
     std::swap(sockfd, other.sockfd);
     return *this;
+}
+
+template <PosixNetworkApi T>
+auto Socket<T>::operator<=>(Socket const & other) const -> int
+{
+    return sockfd - other.sockfd;
+}
+
+template <PosixNetworkApi T>
+auto Socket<T>::operator==(Socket const & other) const -> bool
+{
+    return sockfd == other.sockfd;
 }
 
 template <PosixNetworkApi T>
@@ -152,18 +182,18 @@ auto Socket<T>::accept(SockInfo<T>& client_info) -> Socket<T>
 }
 
 template <PosixNetworkApi T>
-void Socket<T>::set_option(int level, int optname, int const optval)
+void Socket<T>::set_file_option(int cmd, int arg)
 {
-    if (T::ERROR == api.setsockopt(sockfd, level, optname,
-                                   &optval, sizeof(optval))) {
+    if (T::ERROR == api.fcntl(sockfd, cmd, arg)) {
         throw std::runtime_error{err_msg(__func__)};
     }
 }
 
 template <PosixNetworkApi T>
-void Socket<T>::fcntl(int cmd, int arg)
+void Socket<T>::set_socket_option(int level, int optname, int const optval)
 {
-    if (T::ERROR == api.fcntl(sockfd, cmd, arg)) {
+    if (T::ERROR == api.setsockopt(sockfd, level, optname,
+                                   &optval, sizeof(optval))) {
         throw std::runtime_error{err_msg(__func__)};
     }
 }

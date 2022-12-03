@@ -21,7 +21,7 @@
     void (_test_##tname)(std::string& fail_expr [[maybe_unused]])
 
 #define ALW_EXPECT_EQ(a, x)                                                    \
-    if (a != x) {                                                              \
+    if ((a) != (x)) {                                                          \
         std::string expr = #a + std::string{" == "} + #x;                      \
         fail_expr = alewa::test::pretty_err(expr, a, x);                       \
         return;                                                                \
