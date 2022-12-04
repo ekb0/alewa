@@ -28,7 +28,6 @@ add_executable(alewa
     alewa/net/netapi_system.cpp
     alewa/io/ioapi.cpp
     alewa/io/ioapi_system.cpp
-    alewa/io/poller.cpp
 )
 
 target_link_libraries(alewa

@@ -49,7 +49,7 @@ concept PosixNetworkApi = requires(T t)
                       typename T::SockLen optlen, int cmd, int arg)
     {
         { t.setsockopt(sockfd, level, optname, optval, optlen) }
-        -> std::same_as<int>;
+                -> std::same_as<int>;
         { t.fcntl(sockfd, cmd, arg) } -> std::same_as<int>;
     };
 
