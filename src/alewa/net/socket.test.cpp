@@ -79,21 +79,26 @@ ALW_TEST(socket_move)
 {
     MockNetworkApi api;
     AddrInfoList<MockNetworkApi> spec{api, nullptr, nullptr, nullptr};
-    Socket<MockNetworkApi> socket1{api, spec};
-    Socket<MockNetworkApi> socket2{api, spec};
+    std::unique_ptr<Socket<MockNetworkApi>> movedTo;
 
     bool is_closed = false;
     MockNetworkApi::set_is_closed(&is_closed);
 
-    Socket<MockNetworkApi> newSocket = std::move(socket1);
-    socket1.~Socket<MockNetworkApi>();  // NULL_FD
+    {
+        Socket<MockNetworkApi> socket1{api, spec};
+        movedTo = std::make_unique<Socket<MockNetworkApi>>(std::move(socket1));
+        /* socket1 now has NULL_FD, nothing to close when destructor called */
+    }
     ALW_EXPECT_EQ(is_closed, false);
 
-    newSocket = std::move(socket2);
-    socket2.~Socket<MockNetworkApi>();  // Has socket1's fd
+    {
+        Socket<MockNetworkApi> socket2{api, spec};
+        *movedTo = std::move(socket2);
+        /* socket2 now has socket1's FD, will close it when destructor called */
+    }
     ALW_EXPECT_EQ(is_closed, true);
-    is_closed = false;
 
+    is_closed = false;
     MockNetworkApi::set_is_closed(nullptr);
 }
 

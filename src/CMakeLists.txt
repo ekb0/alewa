@@ -3,7 +3,7 @@ add_library(alewa_linker_flags INTERFACE)
 
 target_compile_options(alewa_compiler_flags
     INTERFACE
-        -g
+        -O3
         -Wall
         -Werror
         -Wextra
