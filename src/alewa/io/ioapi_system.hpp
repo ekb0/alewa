@@ -2,7 +2,6 @@
 
 #include <poll.h>
 
-#include "utils.hpp"
 #include "sys/err_desc.hpp"
 
 namespace alewa::io {
@@ -12,7 +11,11 @@ struct SystemIoApi : public sys::SystemErrorDescription
     using PollFd = ::pollfd;
     using Nfds = ::nfds_t;
 
-    ALW_DELEGATE(poll, ::poll);
+    [[nodiscard]]
+    auto poll(PollFd* fds, Nfds nfds, int timeout) const -> int
+    {
+        return ::poll(fds, nfds, timeout);
+    }
 };
 
 }  // namespace alewa::io

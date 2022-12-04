@@ -9,14 +9,15 @@
 
 namespace alewa {
 
-extern int const AI_FLAGS;
-extern int const AI_FAMILY;
-extern int const AI_SOCKTYPE;
-extern int const SOCK_LEVEL;
-extern int const SOCK_OPTNAME;
-extern int const F_CMD;
-extern int const F_ARG;
-extern short const INPUT_EVENTS;
+namespace detail {
+/* Expose the various macros used by the system network API without polluting
+ * the main namespace with functions that mutate global state. */
+#include <netdb.h>
+#include <fcntl.h>
+#include <poll.h>
+
+static int const TCP_STREAM = SOCK_STREAM;
+}  // namespace alewa::detail
 
 template <net::PosixNetworkApi N, io::IoApi I>
 class Server
@@ -51,7 +52,7 @@ void Server<N, I>::start(std::string const & port, int backlog)
 {
     Registry registry;
     net::Socket<N> listener = create_listener(port);
-    registry.fds().push_back({listener.fd(), INPUT_EVENTS, 0});
+    registry.fds().push_back({listener.fd(), POLLIN, 0});
     listener.listen(backlog);
 
     int nready;
@@ -59,7 +60,7 @@ void Server<N, I>::start(std::string const & port, int backlog)
         nready = poll(registry.fds(), 0);  // TODO: retry on exception
         if (nready == 0) { continue; }
 
-        if (registry.fds()[0].revents & INPUT_EVENTS) {
+        if (registry.fds()[0].revents & POLLIN) {
             net::SockInfo<N> client_info;
             net::Socket<N> client = listener.accept(client_info);
             registry.add(std::move(client));
@@ -71,14 +72,14 @@ template <net::PosixNetworkApi N, io::IoApi I>
 auto Server<N, I>::create_listener(std::string const & port) -> net::Socket<N>
 {
     typename N::AddrInfo hints{};
-    hints.ai_flags = AI_FLAGS;
-    hints.ai_family = AI_FAMILY;
-    hints.ai_socktype = AI_SOCKTYPE;
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = detail::TCP_STREAM;
 
     net::AddrInfoList<N> spec{netapi, nullptr, port.c_str(), &hints};
     net::Socket<N> socket{netapi, spec};
-    socket.set_socket_option(SOCK_LEVEL, SOCK_OPTNAME, 1);
-    socket.set_file_option(F_CMD, F_ARG);
+    socket.set_socket_option(SOL_SOCKET, SO_REUSEADDR, 1);
+    socket.set_file_option(F_SETFL, O_NONBLOCK);
     socket.bind(*spec.current());
     return socket;
 }
@@ -97,7 +98,7 @@ template <net::PosixNetworkApi N, io::IoApi I>
 void Server<N, I>::Registry::add(net::Socket<N>&& client)
 {
     assert(clients.find(client.fd()) == clients.end());
-    pollfds.push_back({client.fd(), INPUT_EVENTS, 0});
+    pollfds.push_back({client.fd(), POLLIN, 0});
     clients.insert(std::pair{client.fd(), std::move(client)});
 }
 

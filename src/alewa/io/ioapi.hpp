@@ -13,9 +13,10 @@ concept IoApi = requires(T t)
     typename T::PollFd;
     typename T::Nfds;
 
-    requires requires (typename T::PollFd* fds, typename T::Nfds nfds)
+    requires requires (typename T::PollFd* fds, typename T::Nfds nfds,
+                       int timeout)
     {
-        { t.poll(fds, nfds, int{}) } -> std::same_as<int>;
+        { t.poll(fds, nfds, timeout) } -> std::same_as<int>;
     };
 };
 

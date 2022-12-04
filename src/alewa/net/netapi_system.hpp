@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include "utils.hpp"
 #include "sys/err_desc.hpp"
 
 namespace alewa::net {
@@ -18,18 +17,68 @@ struct SystemNetworkApi : public sys::SystemErrorDescription
     using SockAddr = ::sockaddr;
     using SockLen = ::socklen_t;
 
-    ALW_DELEGATE(getaddrinfo, ::getaddrinfo);
-    ALW_DELEGATE(freeaddrinfo, ::freeaddrinfo);
-    ALW_DELEGATE(gai_strerror, ::gai_strerror);
+    [[nodiscard]]
+    auto getaddrinfo(char const * node, char const * service,
+                     AddrInfo const * hints, AddrInfo** p_ai_list) const -> int
+    {
+        return ::getaddrinfo(node, service, hints, p_ai_list);
+    }
 
-    ALW_DELEGATE(socket, ::socket);
-    ALW_DELEGATE(close, ::close);
-    ALW_DELEGATE(bind, ::bind);
-    ALW_DELEGATE(connect, ::connect);
-    ALW_DELEGATE(listen, ::listen);
-    ALW_DELEGATE(accept, ::accept);
-    ALW_DELEGATE(setsockopt, ::setsockopt);
-    ALW_DELEGATE(fcntl, ::fcntl);
+    AiDeleter const freeaddrinfo = ::freeaddrinfo;
+
+    [[nodiscard]]
+    auto gai_strerror(int errcode) const -> char const *
+    {
+        return ::gai_strerror(errcode);
+    }
+
+    [[nodiscard]]
+    auto socket(int domain, int type, int protocol) const -> int
+    {
+        return ::socket(domain, type, protocol);
+    }
+
+    auto close(int sockfd) const -> int { return ::close(sockfd); }
+
+    [[nodiscard]]
+    auto bind(int sockfd, SockAddr const * addr, SockLen addrlen) const -> int
+    {
+        return ::bind(sockfd, addr, addrlen);
+    }
+
+    [[nodiscard]]
+    auto connect(int sockfd, SockAddr const * addr, SockLen addrlen) const
+            -> int
+    {
+        return ::connect(sockfd, addr, addrlen);
+    }
+
+    [[nodiscard]]
+    auto listen(int sockfd, int backlog) const -> int
+    {
+        return ::listen(sockfd, backlog);
+    }
+
+
+    [[nodiscard]]
+    auto accept(int sockfd, SockAddr* recv_addr, SockLen* recv_addrlen) const
+            -> int
+    {
+        return ::accept(sockfd, recv_addr, recv_addrlen);
+    }
+
+    [[nodiscard]]
+    auto setsockopt(int sockfd, int level, int optname, void const * optval,
+                      SockLen optlen) const -> int
+    {
+        return ::setsockopt(sockfd, level, optname, optval, optlen);
+    }
+
+    [[nodiscard]]
+    auto fcntl(int sockfd, int cmd, int arg) const -> int
+    {
+        return ::fcntl(sockfd, cmd, arg);
+    }
 };
 
 }  // namespace alewa::net

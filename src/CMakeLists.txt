@@ -21,7 +21,6 @@ target_link_options(alewa_linker_flags
 add_executable(alewa
     alewa.cpp
     alewa/server.cpp
-    alewa/utils.cpp
     alewa/sys/err_desc.cpp
     alewa/net/socket.cpp
     alewa/net/netapi.cpp
