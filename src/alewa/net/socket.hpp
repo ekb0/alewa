@@ -21,14 +21,14 @@ public:
                  AddrInfo const * hints)
             : head(nullptr, api.freeaddrinfo)
     {
-        AddrInfo* l = nullptr;
-        int ret = api.getaddrinfo(node, service, hints, &l);
+        AddrInfo* ai_list = nullptr;
+        int ret = api.getaddrinfo(node, service, hints, &ai_list);
         if (ret != T::SUCCESS) {
             std::string m = "getaddrinfo: ";
             throw std::runtime_error{m + api.gai_strerror(ret)};
         }
-        head.reset(l);
-        iter = l;
+        head.reset(ai_list);
+        iter = ai_list;
     }
 
     auto current() const noexcept -> AddrInfo const * { return iter; }
@@ -71,6 +71,9 @@ public:
     auto operator<=>(Socket const & other) const -> int;
     auto operator==(Socket const & other) const -> bool;
 
+    [[nodiscard]]
+    auto fd() const noexcept -> int { return sockfd; }
+
     void bind(AddrInfo const & target);
     void connect(AddrInfo const & target);
 
@@ -79,9 +82,6 @@ public:
 
     void set_file_option(int cmd, int arg);
     void set_socket_option(int level, int optname, int optval);
-
-    [[nodiscard]]
-    auto fd() const noexcept -> int { return sockfd; }
 
 private:
     Socket(T const & api, int sockfd) : api(api), sockfd(sockfd) {};

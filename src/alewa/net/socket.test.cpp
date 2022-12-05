@@ -118,9 +118,9 @@ ALW_TEST(socket_comparison)
     ALW_EXPECT_EQ(y, y);
 
     ALW_EXPECT_EQ(x != y, true);
-    ALW_EXPECT_EQ(x  < y, true);
+    ALW_EXPECT_EQ(x <  y, true);
     ALW_EXPECT_EQ(x <= y, true);
-    ALW_EXPECT_EQ(y  > x, true);
+    ALW_EXPECT_EQ(y >  x, true);
     ALW_EXPECT_EQ(y >= x, true);
 }
 
