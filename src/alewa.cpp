@@ -1,5 +1,4 @@
-#include "net/netapi_system.hpp"
-#include "io/ioapi_system.hpp"
+#include "io/ioapi_sys.hpp"
 #include "server.hpp"
 
 int main(/*int argc, char* argv[]*/)
@@ -9,10 +8,9 @@ int main(/*int argc, char* argv[]*/)
     std::string const PORT = "8080";
     int const BACKLOG = 10;
 
-    net::SystemNetworkApi netapi;
-    io::SystemIoApi ioapi;
+    io::SysIoApi ioapi;
 
-    Server<net::SystemNetworkApi, io::SystemIoApi> server{netapi, ioapi};
+    Server<io::SysIoApi> server{ioapi};
     server.start(PORT, BACKLOG);
 
     return 0;

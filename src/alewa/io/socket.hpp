@@ -3,11 +3,11 @@
 #include <memory>
 #include <cassert>
 
-#include "netapi.hpp"
+#include "ioapi.hpp"
 
-namespace alewa::net {
+namespace alewa::io {
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 class AddrInfoList
 {
 private:
@@ -41,14 +41,14 @@ public:
     }
 };
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 struct SockInfo
 {
     typename T::SockAddr addr;
     typename T::SockLen addrlen;
 };
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 class Socket
 {
 private:
@@ -88,12 +88,12 @@ private:
     auto err_msg(std::string const & func) -> std::string;
 };
 
-}  // namespace alewa::net
+}  // namespace alewa::io
 
-template<alewa::net::PosixNetworkApi T>
-struct std::hash<alewa::net::Socket<T>>
+template<alewa::io::SocketApi T>
+struct std::hash<alewa::io::Socket<T>>
 {
-    auto operator()(alewa::net::Socket<T> const& s) const noexcept
+    auto operator()(alewa::io::Socket<T> const& s) const noexcept
             -> std::size_t
     {
         return std::hash<int>{}(s.fd());
@@ -101,9 +101,9 @@ struct std::hash<alewa::net::Socket<T>>
 };
 
 
-namespace alewa::net {
+namespace alewa::io {
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
 {
     AddrInfo const * it = spec.current();
@@ -114,40 +114,40 @@ Socket<T>::Socket(T const & api, AddrInfoList<T>& spec) : api(api)
     throw std::runtime_error{"socket constructor: " + api.error()};
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 Socket<T>::~Socket()
 {
     if (sockfd == NULL_FD) { return; }
     api.close(sockfd); /* TODO: stderr if this fails */
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 Socket<T>::Socket(Socket&& other) noexcept
         : api(other.api), sockfd(other.sockfd)
 {
     other.sockfd = NULL_FD;
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 auto Socket<T>::operator=(Socket&& other) noexcept -> Socket<T>&
 {
     std::swap(sockfd, other.sockfd);
     return *this;
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 auto Socket<T>::operator<=>(Socket const & other) const -> int
 {
     return sockfd - other.sockfd;
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 auto Socket<T>::operator==(Socket const & other) const -> bool
 {
     return sockfd == other.sockfd;
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 void Socket<T>::bind(AddrInfo const & target)
 {
     if (T::ERROR == api.bind(sockfd, target.ai_addr, target.ai_addrlen)) {
@@ -155,7 +155,7 @@ void Socket<T>::bind(AddrInfo const & target)
     }
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 void Socket<T>::connect(AddrInfo const & target)
 {
     if (T::ERROR == api.connect(sockfd, target.ai_addr, target.ai_addrlen)) {
@@ -163,7 +163,7 @@ void Socket<T>::connect(AddrInfo const & target)
     }
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 void Socket<T>::listen(int backlog)
 {
     if (T::ERROR == api.listen(sockfd, backlog)) {
@@ -171,7 +171,7 @@ void Socket<T>::listen(int backlog)
     }
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 auto Socket<T>::accept(SockInfo<T>& client_info) -> Socket<T>
 {
     int const fd = api.accept(sockfd, &client_info.addr, &client_info.addrlen);
@@ -181,7 +181,7 @@ auto Socket<T>::accept(SockInfo<T>& client_info) -> Socket<T>
     return Socket{api, fd};
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 void Socket<T>::set_file_option(int cmd, int arg)
 {
     if (T::ERROR == api.fcntl(sockfd, cmd, arg)) {
@@ -189,7 +189,7 @@ void Socket<T>::set_file_option(int cmd, int arg)
     }
 }
 
-template <PosixNetworkApi T>
+template <SocketApi T>
 void Socket<T>::set_socket_option(int level, int optname, int const optval)
 {
     if (T::ERROR == api.setsockopt(sockfd, level, optname,
@@ -198,11 +198,10 @@ void Socket<T>::set_socket_option(int level, int optname, int const optval)
     }
 }
 
-template <PosixNetworkApi T>
-auto Socket<T>::err_msg(std::string const & func)
-        -> std::string
+template <SocketApi T>
+auto Socket<T>::err_msg(std::string const & func) -> std::string
 {
     return func + " on socket " + std::to_string(sockfd) + ": " + api.error();
 }
 
-}  // namespace alewa::net
+}  // namespace alewa::io

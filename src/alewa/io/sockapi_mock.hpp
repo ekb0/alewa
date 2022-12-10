@@ -2,9 +2,9 @@
 
 #include <string>
 
-namespace alewa::net::test {
+namespace alewa::io::test {
 
-struct MockNetworkApi
+struct MockSocketApi
 {
     struct SockAddr {
         unsigned short sa_family;
@@ -74,4 +74,4 @@ struct MockNetworkApi
     auto fcntl(int, int, int) const { return ret_code; }
 };
 
-}  // namespace alewa::net::test
+}  // namespace alewa::io::test

@@ -3,14 +3,20 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <poll.h>
 #include <string>
 
-#include "sys/err_desc.hpp"
+namespace alewa::io {
 
-namespace alewa::net {
+struct SysErrorDescription
+{
+    static int const ERROR = -1;
+    static int const SUCCESS = 0;
 
-struct SystemNetworkApi : public sys::SystemErrorDescription
+    [[nodiscard]] std::string error() const;
+};
+
+struct SysSocketApi : public SysErrorDescription
 {
     using AddrInfo = ::addrinfo;
     using AiDeleter = decltype(&::freeaddrinfo);
@@ -69,7 +75,7 @@ struct SystemNetworkApi : public sys::SystemErrorDescription
 
     [[nodiscard]]
     auto setsockopt(int sockfd, int level, int optname, void const * optval,
-                      SockLen optlen) const -> int
+                    SockLen optlen) const -> int
     {
         return ::setsockopt(sockfd, level, optname, optval, optlen);
     }
@@ -81,4 +87,16 @@ struct SystemNetworkApi : public sys::SystemErrorDescription
     }
 };
 
-}  // namespace alewa::net
+struct SysIoApi : public io::SysSocketApi
+{
+    using PollFd = ::pollfd;
+    using Nfds = ::nfds_t;
+
+    [[nodiscard]]
+    auto poll(PollFd* fds, Nfds nfds, int timeout) const -> int
+    {
+        return ::poll(fds, nfds, timeout);
+    }
+};
+
+}  // namespace alewa::io

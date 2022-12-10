@@ -21,12 +21,9 @@ target_link_options(alewa_linker_flags
 add_executable(alewa
     alewa.cpp
     alewa/server.cpp
-    alewa/sys/err_desc.cpp
-    alewa/net/socket.cpp
-    alewa/net/netapi.cpp
-    alewa/net/netapi_system.cpp
     alewa/io/ioapi.cpp
-    alewa/io/ioapi_system.cpp
+    alewa/io/ioapi_sys.cpp
+    alewa/io/socket.cpp
 )
 
 target_link_libraries(alewa
@@ -43,7 +40,7 @@ target_include_directories(alewa
 add_executable(alewa_test
     alewa.test.cpp
     alewa/test/test_utils.cpp
-    alewa/net/netapi_mock.cpp
+    alewa/io/sockapi_mock.cpp
 )
 
 target_link_libraries(alewa_test
